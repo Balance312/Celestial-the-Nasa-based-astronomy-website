@@ -1,0 +1,55 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+      }
+      .compass-outer { animation: rotate 20s linear infinite; }
+    </style>
+  </defs>
+
+  <!-- Background -->
+  <rect width="200" height="200" fill="#2d1b4e"/>
+
+  <!-- Outer circle -->
+  <circle cx="100" cy="100" r="95" fill="none" stroke="#a855f7" stroke-width="3"/>
+  <circle cx="100" cy="100" r="88" fill="none" stroke="#6e0eff" stroke-width="2"/>
+
+  <!-- Compass star points -->
+  <g class="compass-outer">
+    <!-- North point (top) -->
+    <polygon points="100,20 110,50 90,50" fill="#ffffff"/>
+
+    <!-- South point (bottom) -->
+    <polygon points="100,180 110,150 90,150" fill="#e9d5ff"/>
+
+    <!-- East point (right) -->
+    <polygon points="180,100 150,110 150,90" fill="#d8b4fe"/>
+
+    <!-- West point (left) -->
+    <polygon points="20,100 50,110 50,90" fill="#e9d5ff"/>
+
+    <!-- NE point -->
+    <polygon points="155,45 145,65 135,55" fill="#c4b5fd"/>
+
+    <!-- SE point -->
+    <polygon points="155,155 165,135 175,145" fill="#c4b5fd"/>
+
+    <!-- SW point -->
+    <polygon points="45,155 35,135 25,145" fill="#d8b4fe"/>
+
+    <!-- NW point -->
+    <polygon points="45,45 55,65 65,55" fill="#c4b5fd"/>
+  </g>
+
+  <!-- Center circle -->
+  <circle cx="100" cy="100" r="12" fill="#a855f7" stroke="#6e0eff" stroke-width="2"/>
+  <circle cx="100" cy="100" r="6" fill="#ffffff"/>
+
+  <!-- Decorative stars -->
+  <circle cx="30" cy="40" r="2" fill="#a855f7" opacity="0.8"/>
+  <circle cx="170" cy="35" r="1.5" fill="#d8b4fe" opacity="0.6"/>
+  <circle cx="160" cy="175" r="1.5" fill="#c4b5fd" opacity="0.7"/>
+  <circle cx="50" cy="170" r="1" fill="#e9d5ff" opacity="0.5"/>
+</svg>

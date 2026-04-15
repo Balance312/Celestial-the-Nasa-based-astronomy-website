@@ -1,0 +1,107 @@
+.Celestial {
+    font-family: 'Orbitron', sans-serif;
+    color: rgb(110, 14, 255);
+    font-size: 1.8rem;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin: 0;
+    text-shadow: 0 0 10px rgba(110, 14, 255, 0.5);
+}
+
+.navbar-background {
+    background: linear-gradient(135deg, rgb(15, 12, 35) 0%, rgb(30, 20, 60) 100%);
+    border-bottom: 2px solid rgba(110, 14, 255, 0.3);
+    box-shadow: 0 4px 20px rgba(110, 14, 255, 0.1);
+}
+
+.navbar-brand {
+    transition: transform 0.3s ease, text-shadow 0.3s ease;
+}
+
+.navbar-brand:hover {
+    transform: scale(1.05);
+}
+
+.nav-link {
+    color: rgb(200, 200, 255) !important;
+    font-weight: 500;
+    position: relative;
+    transition: all 0.3s ease;
+    text-shadow: 0 0 5px rgba(110, 14, 255, 0.3);
+}
+
+.nav-link::after {
+    content: '';
+    position: absolute;
+    bottom: -5px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, rgb(110, 14, 255), rgb(168, 85, 247));
+    transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+    color: rgb(220, 180, 255) !important;
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.6);
+}
+
+.nav-link:hover::after {
+    width: 100%;
+}
+
+.nav-link.active {
+    color: rgb(168, 85, 247) !important;
+    text-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
+}
+
+.navbar-toggler {
+    border-color: rgba(110, 14, 255, 0.5);
+}
+
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.25rem rgba(110, 14, 255, 0.25);
+    border-color: rgb(110, 14, 255);
+}
+
+.form-control {
+    background-color: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(110, 14, 255, 0.3);
+    color: white;
+}
+
+.form-control::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.form-control:focus {
+    background-color: rgba(255, 255, 255, 0.15);
+    border-color: rgb(110, 14, 255);
+    box-shadow: 0 0 0 0.2rem rgba(110, 14, 255, 0.25);
+    color: white;
+}
+
+.btn-outline-light {
+    border-color: rgb(110, 14, 255);
+    color: rgb(110, 14, 255);
+    transition: all 0.3s ease;
+}
+
+.btn-outline-light:hover {
+    background-color: rgb(110, 14, 255);
+    border-color: rgb(110, 14, 255);
+    color: white;
+    box-shadow: 0 0 15px rgba(110, 14, 255, 0.4);
+}
+
+.dropdown-toggle::after {
+    border-color: rgb(110, 14, 255) !important;
+    border-width: 2px !important;
+    border-radius: 2px;
+}
+
+.dropdown-toggle:hover::after {
+    border-color: rgb(168, 85, 247) !important;
+    filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.5));
+}
+
