@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Router from "./Router.jsx";
 import "./app.css";
 
@@ -32,25 +32,27 @@ const initializeLikes = () => {
 function App() {
   const [favorites, setFavorites] = useState(initializeFavorites);
   const [likes, setLikes] = useState(initializeLikes);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const isFirstPersist = useRef(true);
 
   // Persist favorites to localStorage whenever they change
   useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+    if (isFirstPersist.current) {
+      return;
     }
-  }, [favorites, isHydrated]);
+    localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(favorites));
+  }, [favorites]);
 
   // Persist likes to localStorage whenever they change
   useEffect(() => {
-    if (isHydrated) {
-      localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(likes));
+    if (isFirstPersist.current) {
+      return;
     }
-  }, [likes, isHydrated]);
+    localStorage.setItem(LIKES_STORAGE_KEY, JSON.stringify(likes));
+  }, [likes]);
 
-  // Mark as hydrated after first render
+  // Avoid overwriting storage on the first render cycle.
   useEffect(() => {
-    setIsHydrated(true);
+    isFirstPersist.current = false;
   }, []);
 
   const favoritesByNewest = useMemo(

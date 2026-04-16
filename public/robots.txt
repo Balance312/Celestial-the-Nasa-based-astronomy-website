@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://celestial-the-nasa-based-astronomy-website.vercel.app/sitemap.xml

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import '../pages/pages.css';
+import { getRandomGallery } from '../utils/nasaApi.js';
 
 function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, isFavorited }) {
   const [gallery, setGallery] = useState([]);
@@ -8,10 +9,15 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
   const [selectedImage, setSelectedImage] = useState(null);
 
   useEffect(() => {
-    fetchRandomGallery();
+    const controller = new AbortController();
+    fetchRandomGallery({ signal: controller.signal, preferCache: true });
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
-  const fetchRandomGallery = async () => {
+  const fetchRandomGallery = async ({ signal, preferCache = true } = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -21,21 +27,19 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
         throw new Error('NASA API key is not configured.');
       }
 
-      const response = await fetch(
-        `https://api.nasa.gov/planetary/apod?api_key=${apiKey}&count=12`
-      );
-
-      if (!response.ok) {
-        throw new Error(`NASA API error: ${response.status}`);
-      }
-
-      const data = await response.json();
+      const data = await getRandomGallery(apiKey, 12, { signal, preferCache });
       setGallery(data);
     } catch (err) {
+      if (err.name === 'AbortError') {
+        return;
+      }
+
       setError(err.message || 'Failed to fetch gallery data');
       console.error('Error fetching gallery:', err);
     } finally {
-      setLoading(false);
+      if (!signal?.aborted) {
+        setLoading(false);
+      }
     }
   };
 
@@ -50,7 +54,11 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
 
       <div className="container py-5">
         <div className="gallery-controls text-center mb-5">
-          <button className="btn btn-primary" onClick={fetchRandomGallery} disabled={loading}>
+          <button
+            className="btn btn-primary"
+            onClick={() => fetchRandomGallery({ preferCache: false })}
+            disabled={loading}
+          >
             {loading ? '⏳ Loading...' : '🔄 Load New Images'}
           </button>
         </div>

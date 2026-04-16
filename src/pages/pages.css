@@ -395,6 +395,26 @@
   color: rgba(255, 255, 255, 0.8);
 }
 
+/* APOD Full Image Modal */
+.apod-fullscreen-content {
+  max-width: 96vw;
+  width: auto;
+  border-color: rgba(168, 85, 247, 0.5);
+}
+
+.apod-fullscreen-body {
+  max-height: 88vh;
+  overflow: auto;
+}
+
+.apod-fullscreen-image {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 88vh;
+  object-fit: contain;
+}
+
 /* ===== ABOUT PAGE ===== */
 .about-page {
   background: linear-gradient(135deg, rgb(15, 12, 35) 0%, rgb(25, 20, 50) 50%, rgb(15, 12, 35) 100%);

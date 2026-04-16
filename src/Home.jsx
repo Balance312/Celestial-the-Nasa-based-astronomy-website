@@ -1,44 +1,43 @@
 import "./home.css"
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
+import { getTodayApod } from "./utils/nasaApi.js"
 
 function Home() {
   const [todayAPOD, setTodayAPOD] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [spaceImages] = useState([
-    "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1462332420958-a05d1e7413b3?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1462332420958-a05d1e7413b3?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1462332420958-a05d1e7413b3?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1446776877081-d282a0f896e2?w=300&h=300&fit=crop",
-    "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&h=300&fit=crop",
-  ]);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     const fetchTodayAPOD = async () => {
       try {
         const apiKey = import.meta.env.VITE_NASA_API_KEY;
         if (!apiKey) return;
 
-        const response = await fetch(
-          `https://api.nasa.gov/planetary/apod?api_key=${apiKey}`
-        );
-
-        if (response.ok) {
-          const data = await response.json();
-          setTodayAPOD(data);
-        }
+        const data = await getTodayApod(apiKey, {
+          signal: controller.signal,
+          preferCache: true,
+        });
+        setTodayAPOD(data);
       } catch (err) {
+        if (err.name === 'AbortError') {
+          return;
+        }
+
         console.error('Error fetching APOD:', err);
       } finally {
-        setLoading(false);
+        if (!controller.signal.aborted) {
+          setLoading(false);
+        }
       }
     };
 
     fetchTodayAPOD();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return (
