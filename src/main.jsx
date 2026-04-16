@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import App from './App.jsx'
+import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import '../bootstrap/bootstrap.min.css'
 import '../bootstrap/bootstrap.bundle.min.js'
@@ -8,5 +9,6 @@ import '../bootstrap/bootstrap.bundle.min.js'
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <App />
+    <SpeedInsights />
   </StrictMode>,
 )
