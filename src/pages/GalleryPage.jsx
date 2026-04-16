@@ -36,6 +36,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -176,7 +177,12 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                   <div
                     key={itemId}
                     className="gallery-item"
-                    onClick={() => {
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setCardPosition({
+                        top: rect.top + window.scrollY,
+                        left: rect.left + window.scrollX
+                      });
                       setSelectedImage(item);
                       setIsFullscreenMediaOnly(false);
                     }}
