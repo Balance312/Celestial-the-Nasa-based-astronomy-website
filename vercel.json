@@ -2,9 +2,6 @@
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
-  "env": {
-    "VITE_NASA_API_KEY": "@nasa_api_key"
-  },
   "routes": [
     {
       "src": "/assets/.*",
