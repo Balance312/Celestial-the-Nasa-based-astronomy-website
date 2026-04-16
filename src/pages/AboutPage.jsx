@@ -159,7 +159,14 @@ function AboutPage() {
                   Have questions or feedback? We'd love to hear from you!
                 </p>
                 <div className="text-center mt-4">
-                  <button className="btn btn-primary btn-lg">Contact Us</button>
+                  <a
+                    href="https://github.com/Balance312"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-primary btn-lg"
+                  >
+                    Contact Us
+                  </a>
                 </div>
               </div>
             </div>
