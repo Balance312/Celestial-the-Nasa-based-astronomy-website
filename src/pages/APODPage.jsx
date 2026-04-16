@@ -1,33 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getApodByDate } from '../utils/nasaApi.js';
 
-const convertBlobToPng = async (sourceBlob) => {
-  const imageBitmap = await createImageBitmap(sourceBlob);
-  const canvas = document.createElement('canvas');
-  canvas.width = imageBitmap.width;
-  canvas.height = imageBitmap.height;
 
-  const context = canvas.getContext('2d');
-  if (!context) {
-    throw new Error('Unable to create canvas context for PNG conversion.');
-  }
 
-  context.drawImage(imageBitmap, 0, 0);
-  imageBitmap.close();
-
-  const pngBlob = await new Promise((resolve) => {
-    canvas.toBlob(resolve, 'image/png');
-  });
-
-  if (!pngBlob) {
-    throw new Error('PNG conversion failed.');
-  }
-
-  return pngBlob;
-};
-
-function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, isFavorited }) {
+function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
+  const navigate = useNavigate();
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,7 +40,18 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
         return;
       }
 
-      setError(err.message || 'Failed to fetch APOD data');
+      let errorMessage = 'Failed to load APOD data';
+      if (err.message.includes('503')) {
+        errorMessage = 'NASA API temporarily unavailable. Retrying... If this persists, please try again later.';
+      } else if (err.message.includes('502')) {
+        errorMessage = 'Bad gateway error from NASA API. Please try again in a few moments.';
+      } else if (err.message.includes('429')) {
+        errorMessage = 'API rate limit reached. Please wait a moment before trying again.';
+      } else if (err.message.includes('Failed to fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      setError(errorMessage);
       console.error('Error fetching APOD:', err);
     } finally {
       if (!signal?.aborted) {
@@ -70,23 +60,76 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
     }
   };
 
-  const goToPreviousDay = () => {
-    const date = new Date(selectedDate);
-    date.setDate(date.getDate() - 1);
-    setSelectedDate(date.toISOString().split('T')[0]);
-  };
+  const dateChangeTimeoutRef = useRef(null);
 
-  const goToNextDay = () => {
-    const date = new Date(selectedDate);
-    date.setDate(date.getDate() + 1);
-    setSelectedDate(date.toISOString().split('T')[0]);
-  };
+  // Helper function to add/subtract days from YYYY-MM-DD string
+  const addDaysToDateString = useCallback((dateStr, days) => {
+    const parts = dateStr.split('-');
+    const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+    date.setDate(date.getDate() + days);
+    return date.getFullYear() + '-' + 
+           String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+           String(date.getDate()).padStart(2, '0');
+  }, []);
 
-  const goToToday = () => {
+  const goToPreviousDay = useCallback(() => {
+    const newDateStr = addDaysToDateString(selectedDate, -1);
+    
+    // Enforce minimum date of June 16, 1995 using string comparison
+    if (newDateStr >= '1995-06-16') {
+      setSelectedDate(newDateStr);
+      setError(null);
+    } else {
+      setError('APOD photos started on June 16, 1995. Please select a date from June 16, 1995 onwards.');
+    }
+  }, [selectedDate, addDaysToDateString]);
+
+  const goToNextDay = useCallback(() => {
+    const newDateStr = addDaysToDateString(selectedDate, 1);
+    const todayStr = new Date().toISOString().split('T')[0];
+    
+    // Use string comparison to check if date is today or earlier
+    if (newDateStr <= todayStr) {
+      setSelectedDate(newDateStr);
+      setError(null);
+    } else {
+      setError('Cannot select future dates. Please select today or an earlier date.');
+    }
+  }, [selectedDate, addDaysToDateString]);
+
+  const goToToday = useCallback(() => {
     setSelectedDate(new Date().toISOString().split('T')[0]);
-  };
+  }, []);
 
-  const itemIsLiked = apodData ? isLiked(apodData) : false;
+  const handleDateChange = useCallback((e) => {
+    const newDate = e.target.value;
+    
+    // Validate date range using simple string comparison
+    const minDateStr = '1995-06-16';
+    const maxDateStr = new Date().toISOString().split('T')[0];
+    
+    if (newDate < minDateStr) {
+      setError('APOD photos started on June 16, 1995. Please select a date from June 16, 1995 onwards.');
+      return;
+    }
+    
+    if (newDate > maxDateStr) {
+      setError('Cannot select future dates. Please select today or an earlier date.');
+      return;
+    }
+    
+    setError(null);
+    setSelectedDate(newDate);
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (dateChangeTimeoutRef.current) {
+        clearTimeout(dateChangeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   const itemIsFavorited = apodData ? isFavorited(apodData) : false;
   const downloadImageUrl = apodData?.hdurl || apodData?.url || '';
 
@@ -111,7 +154,7 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
     setIsFullImageOpen(false);
   };
 
-  const handleDownloadImage = async () => {
+  const handleDownloadImage = useCallback(async () => {
     if (!downloadImageUrl || !apodData) {
       return;
     }
@@ -126,27 +169,22 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
     });
 
     try {
-      let blob;
+      const response = await fetch(`/api/download?${params.toString()}`);
 
-      // Preferred path: server-side downloader endpoint (works reliably in deployed env).
-      const endpointResponse = await fetch(`/api/download?${params.toString()}`);
-      const endpointContentType = endpointResponse.headers.get('content-type') || '';
-
-      if (endpointResponse.ok && !endpointContentType.includes('text/html')) {
-        blob = await endpointResponse.blob();
-      } else {
-        // Fallback path: direct fetch (can fail due to CORS on some image hosts).
-        const directResponse = await fetch(downloadImageUrl);
-        if (!directResponse.ok) {
-          throw new Error(`Direct download failed: ${directResponse.status}`);
-        }
-        blob = await directResponse.blob();
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
       }
 
-      const pngBlob = await convertBlobToPng(blob);
-      const objectUrl = URL.createObjectURL(pngBlob);
-      const safeTitle = apodData.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim().replace(/\s+/g, '_');
-      const filename = `${apodData.date}_${safeTitle || 'nasa_apod'}.png`;
+      const contentDisposition = response.headers.get('content-disposition') || '';
+      let filename = 'nasa-image.jpg';
+      
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
 
       const link = document.createElement('a');
       link.href = objectUrl;
@@ -156,12 +194,12 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
       document.body.removeChild(link);
       URL.revokeObjectURL(objectUrl);
     } catch (downloadError) {
-      setError('Download failed in this environment. Please deploy and try again, or use Full Image and save manually.');
+      setError('Download failed. Please try again or check your connection.');
       console.error('Download failed:', downloadError);
     } finally {
       setIsDownloading(false);
     }
-  };
+  }, [downloadImageUrl, apodData]);
 
   return (
     <div className="apod-page">
@@ -173,27 +211,34 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
       </div>
 
       <div className="container py-5">
+        {/* APOD History Note */}
+        <div className="apod-history-note">
+          <i className="bi bi-info-circle-fill"></i>
+          <span>NASA's Astronomy Picture of the Day has been published daily since <strong>June 16, 1995</strong>. Use the date picker below to explore over 30 years of cosmic discoveries.</span>
+        </div>
+
         {/* Date Navigation */}
         <div className="date-navigation-container">
           <div className="date-controls">
             <button className="btn btn-sm btn-outline-light" onClick={goToPreviousDay}>
-              ← Previous
+              ← Previous Day
             </button>
             <div className="date-input-wrapper">
               <input
                 type="date"
                 value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
+                onChange={handleDateChange}
                 className="date-picker"
+                min="1995-06-16"
                 max={new Date().toISOString().split('T')[0]}
               />
-              <span className="date-label">Selected Date</span>
+              <span className="date-label">Select Date</span>
             </div>
             <button className="btn btn-sm btn-outline-light" onClick={goToNextDay}>
-              Next →
+              Next Day →
             </button>
             <button className="btn btn-sm btn-primary ms-2" onClick={goToToday}>
-              Today
+              📅 Today
             </button>
           </div>
         </div>
@@ -226,6 +271,8 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
                       src={apodData.url}
                       alt={apodData.title}
                       className="apod-media-large"
+                      loading="lazy"
+                      decoding="async"
                     />
                   ) : apodData.media_type === 'video' ? (
                     <iframe
@@ -259,23 +306,14 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
                   </div>
 
                   <div className="apod-actions">
-                    <button
-                      className={`btn btn-heart ${itemIsLiked ? 'is-liked' : ''}`}
-                      onClick={() => toggleLike(apodData)}
-                    >
-                      <i className={`bi ${itemIsLiked ? 'bi-heart-fill' : 'bi-heart'}`}></i>
-                      {itemIsLiked ? 'Liked' : 'Like'}
-                    </button>
                     <button className="btn btn-save-favorite" onClick={handleFavoriteToggle}>
-                      <i className={`bi ${itemIsFavorited ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'}`}></i>
+                      <i className={`bi ${itemIsFavorited ? 'bi-heart-fill' : 'bi-heart'}`}></i>
                       {itemIsFavorited ? 'Saved to Collection' : 'Add to Favorites'}
                     </button>
-                    {apodData.media_type === 'image' && (
-                      <button className="btn btn-save-favorite" onClick={openFullImage}>
-                        <i className="bi bi-arrows-fullscreen"></i>
-                        Show Full Image
-                      </button>
-                    )}
+                    <button className="btn btn-save-favorite" onClick={() => navigate(`/media/${apodData.date}`)}>
+                      <i className="bi bi-arrows-fullscreen"></i>
+                      View in Full Screen
+                    </button>
                     {apodData.media_type === 'image' && downloadImageUrl && (
                       <button
                         className="btn btn-save-favorite"
@@ -314,7 +352,7 @@ function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, is
                 x
               </button>
               <div className="apod-fullscreen-body">
-                <img src={apodData.url} alt={apodData.title} className="apod-fullscreen-image" />
+                <img src={apodData.url} alt={apodData.title} className="apod-fullscreen-image" loading="lazy" decoding="async" />
               </div>
             </div>
           </div>

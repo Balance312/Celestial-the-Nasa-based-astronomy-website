@@ -1,7 +1,68 @@
-import { Link } from 'react-router-dom';
+import { useState, useCallback } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { clearApiCache } from '../utils/nasaApi.js';
 import './pages.css';
 
 function Profile({ favorites, removeFromFavorites }) {
+  const navigate = useNavigate();
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [downloadError, setDownloadError] = useState(null);
+  const [cacheCleared, setCacheCleared] = useState(false);
+
+  const handleClearCache = useCallback(() => {
+    clearApiCache();
+    setCacheCleared(true);
+    setTimeout(() => setCacheCleared(false), 3000);
+  }, []);
+
+  const handleDownload = useCallback(async (item) => {
+    if (item.media_type !== 'image') {
+      return;
+    }
+
+    setDownloadingId(item.id);
+    setDownloadError(null);
+
+    const downloadUrl = item.hdurl || item.url;
+    const params = new URLSearchParams({
+      url: downloadUrl,
+      title: item.title,
+      date: item.date,
+    });
+
+    try {
+      const response = await fetch(`/api/download?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      const contentDisposition = response.headers.get('content-disposition') || '';
+      let filename = `${item.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim().replace(/\s+/g, '_')}.jpg`;
+      
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      setDownloadError('Download failed. Please try again.');
+      console.error('Download failed:', error);
+    } finally {
+      setDownloadingId(null);
+    }
+  }, []);
+
   return (
     <div className="profile-page">
       <div className="page-hero profile-hero">
@@ -22,6 +83,14 @@ function Profile({ favorites, removeFromFavorites }) {
           <p className="summary-text">
             Items are sorted by when you added them to your profile.
           </p>
+          <button
+            className="btn btn-sm btn-outline-secondary mt-2"
+            onClick={handleClearCache}
+            title="Clear cached API data to free up memory"
+          >
+            <i className="bi bi-trash3 me-1"></i>
+            {cacheCleared ? 'Cache Cleared!' : 'Clear Cache'}
+          </button>
         </div>
 
         {favorites.length === 0 ? (
@@ -39,7 +108,7 @@ function Profile({ favorites, removeFromFavorites }) {
               <div key={item.id} className="col-12 col-md-6 col-xl-4">
                 <div className="card profile-card h-100">
                   {item.media_type === 'image' ? (
-                    <img src={item.url} className="card-img-top profile-image" alt={item.title} />
+                    <img src={item.url} className="card-img-top profile-image" alt={item.title} loading="lazy" decoding="async" />
                   ) : (
                     <div className="profile-video-placeholder">
                       <i className="bi bi-play-circle"></i>
@@ -60,15 +129,23 @@ function Profile({ favorites, removeFromFavorites }) {
                     </div>
                     <p className="card-text profile-explanation">{item.explanation}</p>
                     <div className="mt-auto d-flex gap-2 pt-3">
-                      <a
-                        href={item.url}
-                        target="_blank"
-                        rel="noreferrer"
+                      <button
                         className="btn btn-outline-light btn-sm"
+                        onClick={() => navigate(`/media/${item.date}`)}
                       >
-                        <i className="bi bi-box-arrow-up-right me-1"></i>
-                        Open
-                      </a>
+                        <i className="bi bi-arrows-fullscreen me-1"></i>
+                        View Full Image
+                      </button>
+                      {item.media_type === 'image' && (
+                        <button
+                          className="btn btn-outline-light btn-sm"
+                          onClick={() => handleDownload(item)}
+                          disabled={downloadingId === item.id}
+                        >
+                          <i className="bi bi-download me-1"></i>
+                          {downloadingId === item.id ? 'Downloading...' : 'Download'}
+                        </button>
+                      )}
                       <button
                         className="btn btn-danger btn-sm ms-auto"
                         onClick={() => removeFromFavorites(item.id)}
