@@ -36,7 +36,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
-  const [cardPosition, setCardPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -57,7 +56,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         throw new Error('NASA API key is not configured.');
       }
 
-      const data = await getRandomGallery(apiKey, 12, { signal, preferCache });
+      const data = await getRandomGallery(apiKey, 8, { signal, preferCache });
       setGallery(data);
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -177,19 +176,20 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                   <div
                     key={itemId}
                     className="gallery-item"
-                    onClick={(e) => {
-                      const rect = e.currentTarget.getBoundingClientRect();
-                      setCardPosition({
-                        top: rect.top + window.scrollY,
-                        left: rect.left + window.scrollX
-                      });
+                    onClick={() => {
                       setSelectedImage(item);
                       setIsFullscreenMediaOnly(false);
                     }}
                   >
                     <div className="gallery-thumbnail">
                       {item.media_type === 'image' ? (
-                        <img src={item.url} alt={item.title} loading="lazy" decoding="async" />
+                        <img 
+                          src={item.url} 
+                          alt={item.title} 
+                          loading="lazy" 
+                          decoding="async"
+                          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                        />
                       ) : (
                         <div className="video-placeholder">
                           <div className="video-play-button">
