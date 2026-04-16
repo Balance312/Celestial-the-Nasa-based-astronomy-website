@@ -12,6 +12,7 @@
     background: linear-gradient(135deg, rgb(15, 12, 35) 0%, rgb(30, 20, 60) 100%);
     border-bottom: 2px solid rgba(110, 14, 255, 0.3);
     box-shadow: 0 4px 20px rgba(110, 14, 255, 0.1);
+    contain: layout style paint;
 }
 
 .navbar-brand {
@@ -59,7 +60,12 @@
     background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(110, 14, 255, 0.95));
     color: #ffffff;
     font-weight: 700;
-    min-width: 24px;
+    min-width: 28px;
+    width: 28px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
 }
 
