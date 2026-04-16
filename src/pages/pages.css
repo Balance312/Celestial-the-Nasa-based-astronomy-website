@@ -627,6 +627,51 @@
   margin-bottom: 0;
 }
 
+.gallery-item-primary-actions {
+  display: flex;
+  gap: 10px;
+  margin: 12px 0;
+  flex-wrap: wrap;
+}
+
+.btn-gallery-action {
+  border: 1px solid rgba(168, 85, 247, 0.65);
+  background: rgba(24, 16, 54, 0.85);
+  color: #f3e8ff;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-weight: 600;
+  padding: 8px 12px;
+}
+
+.btn-gallery-action:hover {
+  color: #ffffff;
+  border-color: rgba(216, 180, 254, 0.95);
+  background: linear-gradient(135deg, rgba(110, 14, 255, 0.45), rgba(168, 85, 247, 0.35));
+  box-shadow: 0 0 14px rgba(168, 85, 247, 0.45);
+}
+
+.btn-gallery-action.btn-download {
+  border-color: rgba(125, 211, 252, 0.6);
+  color: #dbeafe;
+}
+
+.btn-gallery-action.btn-download:hover {
+  border-color: rgba(125, 211, 252, 0.95);
+  background: linear-gradient(135deg, rgba(14, 116, 144, 0.45), rgba(3, 105, 161, 0.4));
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.35);
+}
+
+.btn-gallery-action:disabled,
+.btn-gallery-action:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  border-color: rgba(216, 180, 254, 0.35);
+  background: rgba(24, 16, 54, 0.55);
+  box-shadow: none;
+}
+
 /* ===== PROFILE PAGE ===== */
 .profile-page {
   min-height: 100vh;

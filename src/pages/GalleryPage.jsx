@@ -2,11 +2,19 @@ import { useEffect, useState } from 'react';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
 
+const sanitizeFilename = (value) =>
+  (value || 'nasa-image')
+    .replace(/[^a-z0-9\s-]/gi, '')
+    .trim()
+    .replace(/\s+/g, '-')
+    .toLowerCase();
+
 function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, isFavorited }) {
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
+  const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -41,6 +49,24 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
         setLoading(false);
       }
     }
+  };
+
+  const handleDownload = (event, item) => {
+    event.stopPropagation();
+
+    if (item.media_type !== 'image') {
+      return;
+    }
+
+    const downloadUrl = item.hdurl || item.url;
+    const anchor = document.createElement('a');
+    anchor.href = downloadUrl;
+    anchor.download = `${sanitizeFilename(item.title)}.jpg`;
+    anchor.target = '_blank';
+    anchor.rel = 'noopener noreferrer';
+    document.body.appendChild(anchor);
+    anchor.click();
+    document.body.removeChild(anchor);
   };
 
   return (
@@ -91,7 +117,10 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                   <div
                     key={itemId}
                     className="gallery-item"
-                    onClick={() => setSelectedImage(item)}
+                    onClick={() => {
+                      setSelectedImage(item);
+                      setIsFullscreenMediaOnly(false);
+                    }}
                   >
                     <div className="gallery-thumbnail">
                       {item.media_type === 'image' ? (
@@ -105,6 +134,28 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                     <div className="gallery-info">
                       <h4 className="gallery-title">{item.title}</h4>
                       <p className="gallery-date">{item.date}</p>
+                      <div className="gallery-item-primary-actions">
+                        <button
+                          className="btn btn-gallery-action btn-sm"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setSelectedImage(item);
+                            setIsFullscreenMediaOnly(true);
+                          }}
+                        >
+                          <i className="bi bi-arrows-fullscreen"></i>
+                          {item.media_type === 'image' ? 'View Full' : 'Open Media'}
+                        </button>
+                        <button
+                          className="btn btn-gallery-action btn-download btn-sm"
+                          onClick={(event) => handleDownload(event, item)}
+                          disabled={item.media_type !== 'image'}
+                          title={item.media_type === 'image' ? 'Download image' : 'Download is only available for images'}
+                        >
+                          <i className="bi bi-download"></i>
+                          Download
+                        </button>
+                      </div>
                       <div className="gallery-item-actions">
                         <button
                           className={`btn btn-heart btn-sm ${itemIsLiked ? 'is-liked' : ''}`}
@@ -138,14 +189,33 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
 
             {/* Modal for selected image */}
             {selectedImage && (
-              <div className="modal-overlay" onClick={() => setSelectedImage(null)}>
-                <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                  <button className="modal-close" onClick={() => setSelectedImage(null)}>
+              <div
+                className="modal-overlay"
+                onClick={() => {
+                  setSelectedImage(null);
+                  setIsFullscreenMediaOnly(false);
+                }}
+              >
+                <div
+                  className={`modal-content ${isFullscreenMediaOnly ? 'apod-fullscreen-content' : ''}`}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <button
+                    className="modal-close"
+                    onClick={() => {
+                      setSelectedImage(null);
+                      setIsFullscreenMediaOnly(false);
+                    }}
+                  >
                     ✕
                   </button>
-                  <div className="modal-body">
+                  <div className={`modal-body ${isFullscreenMediaOnly ? 'apod-fullscreen-body' : ''}`}>
                     {selectedImage.media_type === 'image' ? (
-                      <img src={selectedImage.url} alt={selectedImage.title} className="modal-image" />
+                      <img
+                        src={selectedImage.hdurl || selectedImage.url}
+                        alt={selectedImage.title}
+                        className={isFullscreenMediaOnly ? 'apod-fullscreen-image' : 'modal-image'}
+                      />
                     ) : (
                       <iframe
                         src={selectedImage.url}
@@ -155,14 +225,16 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                       />
                     )}
                   </div>
-                  <div className="modal-info">
-                    <h2>{selectedImage.title}</h2>
-                    <p className="text-muted">{selectedImage.date}</p>
-                    {selectedImage.copyright && (
-                      <p className="copyright">© {selectedImage.copyright}</p>
-                    )}
-                    <p className="explanation">{selectedImage.explanation}</p>
-                  </div>
+                  {!isFullscreenMediaOnly && (
+                    <div className="modal-info">
+                      <h2>{selectedImage.title}</h2>
+                      <p className="text-muted">{selectedImage.date}</p>
+                      {selectedImage.copyright && (
+                        <p className="copyright">© {selectedImage.copyright}</p>
+                      )}
+                      <p className="explanation">{selectedImage.explanation}</p>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
