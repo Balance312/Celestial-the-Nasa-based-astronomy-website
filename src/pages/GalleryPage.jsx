@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import '../pages/pages.css';
 
-function GalleryPage() {
+function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, isFavorited }) {
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -74,27 +74,58 @@ function GalleryPage() {
         {!loading && gallery.length > 0 && (
           <>
             <div className="gallery-grid">
-              {gallery.map((item, index) => (
-                <div
-                  key={index}
-                  className="gallery-item"
-                  onClick={() => setSelectedImage(item)}
-                >
-                  <div className="gallery-thumbnail">
-                    {item.media_type === 'image' ? (
-                      <img src={item.url} alt={item.title} />
-                    ) : (
-                      <div className="video-placeholder">
-                        <span>🎬 Video</span>
+              {gallery.map((item) => {
+                const itemId = `${item.date}-${item.title}`;
+                const itemIsLiked = isLiked(item);
+                const itemIsFavorited = isFavorited(item);
+
+                return (
+                  <div
+                    key={itemId}
+                    className="gallery-item"
+                    onClick={() => setSelectedImage(item)}
+                  >
+                    <div className="gallery-thumbnail">
+                      {item.media_type === 'image' ? (
+                        <img src={item.url} alt={item.title} />
+                      ) : (
+                        <div className="video-placeholder">
+                          <span>🎬 Video</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="gallery-info">
+                      <h4 className="gallery-title">{item.title}</h4>
+                      <p className="gallery-date">{item.date}</p>
+                      <div className="gallery-item-actions">
+                        <button
+                          className={`btn btn-heart btn-sm ${itemIsLiked ? 'is-liked' : ''}`}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            toggleLike(item);
+                          }}
+                        >
+                          <i className={`bi ${itemIsLiked ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                        </button>
+                        <button
+                          className="btn btn-save-favorite btn-sm"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            if (itemIsFavorited) {
+                              removeFromFavorites(itemId);
+                              return;
+                            }
+                            addToFavorites(item);
+                          }}
+                        >
+                          <i className={`bi ${itemIsFavorited ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'}`}></i>
+                          {itemIsFavorited ? 'Saved' : 'Favorite'}
+                        </button>
                       </div>
-                    )}
+                    </div>
                   </div>
-                  <div className="gallery-info">
-                    <h4 className="gallery-title">{item.title}</h4>
-                    <p className="gallery-date">{item.date}</p>
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Modal for selected image */}

@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import '../pages/pages.css';
 
-function APODPage() {
+function APODPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, isFavorited }) {
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -53,6 +53,22 @@ function APODPage() {
 
   const goToToday = () => {
     setSelectedDate(new Date().toISOString().split('T')[0]);
+  };
+
+  const itemIsLiked = apodData ? isLiked(apodData) : false;
+  const itemIsFavorited = apodData ? isFavorited(apodData) : false;
+
+  const handleFavoriteToggle = () => {
+    if (!apodData) {
+      return;
+    }
+
+    if (itemIsFavorited) {
+      removeFromFavorites(`${apodData.date}-${apodData.title}`);
+      return;
+    }
+
+    addToFavorites(apodData);
   };
 
   return (
@@ -148,6 +164,20 @@ function APODPage() {
                     {apodData.copyright && (
                       <span className="meta-item">© {apodData.copyright}</span>
                     )}
+                  </div>
+
+                  <div className="apod-actions">
+                    <button
+                      className={`btn btn-heart ${itemIsLiked ? 'is-liked' : ''}`}
+                      onClick={() => toggleLike(apodData)}
+                    >
+                      <i className={`bi ${itemIsLiked ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                      {itemIsLiked ? 'Liked' : 'Like'}
+                    </button>
+                    <button className="btn btn-save-favorite" onClick={handleFavoriteToggle}>
+                      <i className={`bi ${itemIsFavorited ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'}`}></i>
+                      {itemIsFavorited ? 'Saved to Collection' : 'Add to Favorites'}
+                    </button>
                   </div>
 
                   <p className="apod-explanation-large">{apodData.explanation}</p>

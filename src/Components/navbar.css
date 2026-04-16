@@ -55,6 +55,14 @@
     text-shadow: 0 0 10px rgba(168, 85, 247, 0.8);
 }
 
+.collection-badge {
+    background: linear-gradient(135deg, rgba(168, 85, 247, 0.95), rgba(110, 14, 255, 0.95));
+    color: #ffffff;
+    font-weight: 700;
+    min-width: 24px;
+    text-align: center;
+}
+
 .navbar-toggler {
     border-color: rgba(110, 14, 255, 0.5);
 }

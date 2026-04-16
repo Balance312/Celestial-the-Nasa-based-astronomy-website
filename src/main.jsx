@@ -4,6 +4,7 @@ import App from './App.jsx'
 import { SpeedInsights } from '@vercel/speed-insights/react'
 
 import '../bootstrap/bootstrap.min.css'
+import 'bootstrap-icons/font/bootstrap-icons.css'
 import '../bootstrap/bootstrap.bundle.min.js'
 
 createRoot(document.getElementById('root')).render(
