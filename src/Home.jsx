@@ -72,7 +72,15 @@ function Home() {
             <div className="row">
               <div className="col-lg-6 mb-4">
                 {todayAPOD.media_type === 'image' ? (
-                  <img src={todayAPOD.url} alt={todayAPOD.title} className="preview-image" />
+                  <img 
+                    src={todayAPOD.url} 
+                    alt={todayAPOD.title} 
+                    className="preview-image" 
+                    loading="eager"
+                    decoding="async"
+                    width="100%"
+                    height="auto"
+                  />
                 ) : (
                   <div className="preview-video-placeholder">
                     🎬 Video
@@ -120,9 +128,9 @@ function Home() {
             </div>
             <div className="col-lg-4 col-md-6">
               <div className="feature-card">
-                <div className="feature-icon">⚡</div>
-                <h3 className="feature-title">Fast & Responsive</h3>
-                <p className="feature-text">Lightning-fast loading times optimized for all devices with a beautiful, modern interface.</p>
+                <div className="feature-icon">📅</div>
+                <h3 className="feature-title">Historical Archive</h3>
+                <p className="feature-text">Access over 30 years of NASA's Astronomy Picture of the Day archive and explore cosmic imagery from any date.</p>
               </div>
             </div>
             <div className="col-lg-4 col-md-6">

@@ -1,4 +1,9 @@
 /* Global Styles */
+@font-face {
+    font-family: 'Segoe UI';
+    font-display: swap;
+}
+
 :root {
     --primary-color: rgb(110, 14, 255);
     --secondary-color: rgb(168, 85, 247);
@@ -26,6 +31,7 @@ body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     line-height: 1.6;
     overflow-x: hidden;
+    contain: layout style paint;
 }
 
 /* Scrollbar Styling */

@@ -64,4 +64,23 @@ const devDownloadProxy = () => ({
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), devDownloadProxy()],
+  build: {
+    // Optimize chunk size and splitting
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'router': ['react-router-dom'],
+        }
+      }
+    },
+    // Reduce bundle size with better compression
+    minify: 'terser',
+    terserOptions: {
+      compress: {
+        drop_console: false,
+      }
+    },
+    reportCompressedSize: false,
+  }
 })

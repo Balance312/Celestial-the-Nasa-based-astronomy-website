@@ -22,6 +22,7 @@ body {
     align-items: center;
     position: relative;
     overflow: hidden;
+    contain: layout style paint;
 }
 
 .hero-section::before {
@@ -39,7 +40,6 @@ body {
 .hero-content {
     position: relative;
     z-index: 2;
-    animation: slideInLeft 1s ease-out;
 }
 
 .hero-title {
@@ -53,6 +53,7 @@ body {
     margin-bottom: 1.5rem;
     text-shadow: 0 0 20px rgba(110, 14, 255, 0.3);
     line-height: 1.2;
+    animation: none;
 }
 
 .hero-subtitle {
@@ -60,6 +61,7 @@ body {
     color: rgba(255, 255, 255, 0.8);
     margin-bottom: 1.5rem;
     animation: slideInLeft 1.2s ease-out;
+    animation-delay: 0.2s;
 }
 
 .hero-description {
@@ -68,6 +70,7 @@ body {
     margin-bottom: 3rem;
     line-height: 1.6;
     animation: slideInLeft 1.3s ease-out;
+    animation-delay: 0.4s;
 }
 
 .hero-buttons {
@@ -174,6 +177,9 @@ body {
     cursor:default;
     overflow: hidden;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
 }
 
 .feature-card::before {
@@ -218,6 +224,7 @@ body {
     color: rgba(255, 255, 255, 0.7);
     position: relative;
     z-index: 2;
+    flex: 1;
 }
 
 /* CTA Section */
@@ -609,17 +616,19 @@ body {
 .apod-preview-section {
     background: linear-gradient(135deg, rgba(110, 14, 255, 0.08) 0%, rgba(168, 85, 247, 0.05) 100%);
     border-bottom: 1px solid rgba(110, 14, 255, 0.2);
+    contain: layout style paint;
 }
 
 .preview-image {
     width: 100%;
     height: auto;
     max-height: 400px;
+    aspect-ratio: 16 / 9;
     object-fit: cover;
     border-radius: 12px;
     border: 2px solid rgba(110, 14, 255, 0.3);
     box-shadow: 0 8px 30px rgba(110, 14, 255, 0.2);
-    transition: all 0.3s ease;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
 }
 
 .preview-image:hover {
@@ -646,12 +655,16 @@ body {
     color: rgb(168, 85, 247);
     margin-bottom: 0.5rem;
     line-height: 1.3;
+    min-height: 52px;
+    contain: layout;
 }
 
 .preview-date {
     font-size: 0.95rem;
     color: rgba(255, 255, 255, 0.6);
     margin-bottom: 1.5rem;
+    min-height: 28px;
+    contain: layout;
 }
 
 .preview-text {
@@ -659,6 +672,8 @@ body {
     color: rgba(255, 255, 255, 0.8);
     line-height: 1.7;
     margin-bottom: 1.5rem;
+    min-height: 68px;
+    contain: layout;
 }
 
 /* Responsive */

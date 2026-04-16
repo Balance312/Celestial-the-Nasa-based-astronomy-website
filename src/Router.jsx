@@ -8,13 +8,12 @@ const APODPage = lazy(() => import("./pages/APODPage.jsx"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage.jsx"));
 const AboutPage = lazy(() => import("./pages/AboutPage.jsx"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
+const MediaView = lazy(() => import("./pages/MediaView.jsx"));
 
 function Router({
   favorites,
   addToFavorites,
   removeFromFavorites,
-  toggleLike,
-  isLiked,
   isFavorited,
 }) {
   return (
@@ -39,8 +38,6 @@ function Router({
               <APODPage
                 addToFavorites={addToFavorites}
                 removeFromFavorites={removeFromFavorites}
-                toggleLike={toggleLike}
-                isLiked={isLiked}
                 isFavorited={isFavorited}
               />
             }
@@ -51,8 +48,16 @@ function Router({
               <GalleryPage
                 addToFavorites={addToFavorites}
                 removeFromFavorites={removeFromFavorites}
-                toggleLike={toggleLike}
-                isLiked={isLiked}
+                isFavorited={isFavorited}
+              />
+            }
+          />
+          <Route
+            path="/media/:date"
+            element={
+              <MediaView
+                addToFavorites={addToFavorites}
+                removeFromFavorites={removeFromFavorites}
                 isFavorited={isFavorited}
               />
             }

@@ -1,5 +1,7 @@
 const NASA_API_BASE = "https://api.nasa.gov/planetary/apod";
-const DEFAULT_TIMEOUT_MS = 12000;
+const DEFAULT_TIMEOUT_MS = 5000;
+const MAX_RETRIES = 3;
+const INITIAL_RETRY_DELAY_MS = 1000;
 
 const CACHE_MAX_AGE = {
   apodByDate: 1000 * 60 * 60 * 24 * 30,
@@ -66,6 +68,36 @@ const fetchJsonWithTimeout = async (url, { signal, timeoutMs = DEFAULT_TIMEOUT_M
   }
 };
 
+const fetchWithRetry = async (url, { signal, timeoutMs = DEFAULT_TIMEOUT_MS, retries = MAX_RETRIES } = {}) => {
+  let lastError;
+  
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    try {
+      return await fetchJsonWithTimeout(url, { signal, timeoutMs });
+    } catch (error) {
+      lastError = error;
+      
+      // Check if error is retryable (network error, 503, 502, 429, timeout)
+      const isRetryable = 
+        error.name === 'AbortError' ||
+        error.message.includes('503') ||
+        error.message.includes('502') ||
+        error.message.includes('429') ||
+        error.message.includes('Failed to fetch');
+      
+      if (!isRetryable || attempt === retries) {
+        break;
+      }
+      
+      // Exponential backoff: 1s, 2s, 4s
+      const delayMs = INITIAL_RETRY_DELAY_MS * Math.pow(2, attempt);
+      await new Promise(resolve => setTimeout(resolve, delayMs));
+    }
+  }
+  
+  throw lastError;
+};
+
 export const getApodByDate = async (apiKey, date, options = {}) => {
   const { signal, preferCache = true } = options;
   const cacheKey = `nasa:apod:date:${date}`;
@@ -77,7 +109,7 @@ export const getApodByDate = async (apiKey, date, options = {}) => {
     }
   }
 
-  const data = await fetchJsonWithTimeout(
+  const data = await fetchWithRetry(
     `${NASA_API_BASE}?api_key=${apiKey}&date=${date}`,
     { signal },
   );
@@ -98,7 +130,7 @@ export const getTodayApod = async (apiKey, options = {}) => {
     }
   }
 
-  const data = await fetchJsonWithTimeout(`${NASA_API_BASE}?api_key=${apiKey}`, { signal });
+  const data = await fetchWithRetry(`${NASA_API_BASE}?api_key=${apiKey}`, { signal });
 
   writeCache(cacheKey, data);
   return data;
@@ -115,11 +147,28 @@ export const getRandomGallery = async (apiKey, count = 12, options = {}) => {
     }
   }
 
-  const data = await fetchJsonWithTimeout(
+  const data = await fetchWithRetry(
     `${NASA_API_BASE}?api_key=${apiKey}&count=${count}`,
     { signal },
   );
 
   writeCache(cacheKey, data);
   return data;
+};
+
+// Clear API cache - removes all NASA APOD cache keys from localStorage
+export const clearApiCache = () => {
+  const keysToRemove = [];
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i);
+    if (key && key.startsWith('nasa:apod:')) {
+      keysToRemove.push(key);
+    }
+  }
+  keysToRemove.forEach(key => localStorage.removeItem(key));
+};
+
+// Clear a specific cache key
+export const clearCacheKey = (key) => {
+  localStorage.removeItem(key);
 };

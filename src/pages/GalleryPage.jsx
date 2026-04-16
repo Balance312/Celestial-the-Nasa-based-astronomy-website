@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
 
@@ -9,12 +10,33 @@ const sanitizeFilename = (value) =>
     .replace(/\s+/g, '-')
     .toLowerCase();
 
-function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked, isFavorited }) {
+const convertVideoUrl = (url) => {
+  if (!url) return '';
+  
+  // YouTube watch URL to embed URL
+  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+  if (youtubeMatch) {
+    return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1`;
+  }
+  
+  // Vimeo URL to embed URL
+  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+  if (vimeoMatch) {
+    return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
+  }
+  
+  // Already an embed URL, return as-is
+  return url;
+};
+
+function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
+  const navigate = useNavigate();
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
+  const [cardPosition, setCardPosition] = useState({ top: 0, left: 0 });
 
   useEffect(() => {
     const controller = new AbortController();
@@ -25,7 +47,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
     };
   }, []);
 
-  const fetchRandomGallery = async ({ signal, preferCache = true } = {}) => {
+  const fetchRandomGallery = useCallback(async ({ signal, preferCache = true } = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -42,16 +64,27 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
         return;
       }
 
-      setError(err.message || 'Failed to fetch gallery data');
+      let errorMessage = 'Failed to load gallery';
+      if (err.message.includes('503')) {
+        errorMessage = 'NASA API temporarily unavailable. Retrying... If this persists, please try again later.';
+      } else if (err.message.includes('502')) {
+        errorMessage = 'Bad gateway error from NASA API. Please try again in a few moments.';
+      } else if (err.message.includes('429')) {
+        errorMessage = 'API rate limit reached. Please wait a moment before trying again.';
+      } else if (err.message.includes('Failed to fetch')) {
+        errorMessage = 'Network error. Please check your connection and try again.';
+      }
+      
+      setError(errorMessage);
       console.error('Error fetching gallery:', err);
     } finally {
       if (!signal?.aborted) {
         setLoading(false);
       }
     }
-  };
+  }, []);
 
-  const handleDownload = (event, item) => {
+  const handleDownload = useCallback(async (event, item) => {
     event.stopPropagation();
 
     if (item.media_type !== 'image') {
@@ -59,15 +92,42 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
     }
 
     const downloadUrl = item.hdurl || item.url;
-    const anchor = document.createElement('a');
-    anchor.href = downloadUrl;
-    anchor.download = `${sanitizeFilename(item.title)}.jpg`;
-    anchor.target = '_blank';
-    anchor.rel = 'noopener noreferrer';
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-  };
+    const params = new URLSearchParams({
+      url: downloadUrl,
+      title: item.title,
+      date: item.date,
+    });
+
+    try {
+      const response = await fetch(`/api/download?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error(`Download failed: ${response.status}`);
+      }
+
+      const contentDisposition = response.headers.get('content-disposition') || '';
+      let filename = `${sanitizeFilename(item.title)}.jpg`;
+      
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch) {
+        filename = filenameMatch[1];
+      }
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename;
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Download failed. Please try again or check your connection.');
+    }
+  }, []);
 
   return (
     <div className="gallery-page">
@@ -84,6 +144,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
             className="btn btn-primary"
             onClick={() => fetchRandomGallery({ preferCache: false })}
             disabled={loading}
+            style={loading ? { pointerEvents: 'none' } : {}}
           >
             {loading ? '⏳ Loading...' : '🔄 Load New Images'}
           </button>
@@ -110,24 +171,31 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
             <div className="gallery-grid">
               {gallery.map((item) => {
                 const itemId = `${item.date}-${item.title}`;
-                const itemIsLiked = isLiked(item);
                 const itemIsFavorited = isFavorited(item);
 
                 return (
                   <div
                     key={itemId}
                     className="gallery-item"
-                    onClick={() => {
+                    onClick={(e) => {
+                      const rect = e.currentTarget.getBoundingClientRect();
+                      setCardPosition({
+                        top: rect.top + window.scrollY,
+                        left: rect.left + window.scrollX
+                      });
                       setSelectedImage(item);
                       setIsFullscreenMediaOnly(false);
                     }}
                   >
                     <div className="gallery-thumbnail">
                       {item.media_type === 'image' ? (
-                        <img src={item.url} alt={item.title} />
+                        <img src={item.url} alt={item.title} loading="lazy" decoding="async" />
                       ) : (
                         <div className="video-placeholder">
-                          <span>🎬 Video</span>
+                          <div className="video-play-button">
+                            <i className="bi bi-play-circle-fill"></i>
+                          </div>
+                          <span className="video-label">🎬 Video</span>
                         </div>
                       )}
                     </div>
@@ -139,8 +207,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                           className="btn btn-gallery-action btn-sm"
                           onClick={(event) => {
                             event.stopPropagation();
-                            setSelectedImage(item);
-                            setIsFullscreenMediaOnly(true);
+                            navigate(`/media/${item.date}`);
                           }}
                         >
                           <i className="bi bi-arrows-fullscreen"></i>
@@ -158,15 +225,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                       </div>
                       <div className="gallery-item-actions">
                         <button
-                          className={`btn btn-heart btn-sm ${itemIsLiked ? 'is-liked' : ''}`}
-                          onClick={(event) => {
-                            event.stopPropagation();
-                            toggleLike(item);
-                          }}
-                        >
-                          <i className={`bi ${itemIsLiked ? 'bi-heart-fill' : 'bi-heart'}`}></i>
-                        </button>
-                        <button
                           className="btn btn-save-favorite btn-sm"
                           onClick={(event) => {
                             event.stopPropagation();
@@ -177,7 +235,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                             addToFavorites(item);
                           }}
                         >
-                          <i className={`bi ${itemIsFavorited ? 'bi-bookmark-check-fill' : 'bi-bookmark-plus'}`}></i>
+                          <i className={`bi ${itemIsFavorited ? 'bi-heart-fill' : 'bi-heart'}`}></i>
                           {itemIsFavorited ? 'Saved' : 'Favorite'}
                         </button>
                       </div>
@@ -189,17 +247,26 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
 
             {/* Modal for selected image */}
             {selectedImage && (
-              <div
-                className="modal-overlay"
-                onClick={() => {
-                  setSelectedImage(null);
-                  setIsFullscreenMediaOnly(false);
-                }}
-              >
+              <>
                 <div
-                  className={`modal-content ${isFullscreenMediaOnly ? 'apod-fullscreen-content' : ''}`}
-                  onClick={(e) => e.stopPropagation()}
+                  className="modal-overlay"
+                  onClick={() => {
+                    setSelectedImage(null);
+                    setIsFullscreenMediaOnly(false);
+                  }}
                 >
+                  <div
+                    className={`modal-content ${isFullscreenMediaOnly ? 'apod-fullscreen-content' : ''}`}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      position: 'fixed',
+                      top: `50%`,
+                      left: `50%`,
+                      transform: 'translate(-50%, -50%)',
+                      maxHeight: '85vh',
+                      zIndex: '1001'
+                    }}
+                  >
                   <button
                     className="modal-close"
                     onClick={() => {
@@ -215,14 +282,21 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                         src={selectedImage.hdurl || selectedImage.url}
                         alt={selectedImage.title}
                         className={isFullscreenMediaOnly ? 'apod-fullscreen-image' : 'modal-image'}
+                        loading="lazy"
+                        decoding="async"
                       />
                     ) : (
-                      <iframe
-                        src={selectedImage.url}
-                        className="modal-iframe"
-                        title={selectedImage.title}
-                        allowFullScreen
-                      />
+                      <div className="video-container">
+                        <iframe
+                          src={convertVideoUrl(selectedImage.url)}
+                          className="modal-iframe"
+                          title={selectedImage.title}
+                          allowFullScreen
+                          allow="autoplay; fullscreen; encrypted-media; accelerometer; gyroscope"
+                          frameBorder="0"
+                          scrolling="no"
+                        />
+                      </div>
                     )}
                   </div>
                   {!isFullscreenMediaOnly && (
@@ -237,6 +311,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, toggleLike, isLiked,
                   )}
                 </div>
               </div>
+              </>
             )}
           </>
         )}
