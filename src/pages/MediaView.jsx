@@ -95,13 +95,7 @@ function MediaView({
         date: itemDate,
       });
 
-      // For mobile devices, use direct redirect which is more reliable
-      if (isMobileDevice()) {
-        window.location.href = `/api/download?${params.toString()}`;
-        return;
-      }
-
-      // For desktop, use blob download for better UX
+      // Use blob download for all devices (more reliable)
       const response = await fetch(`/api/download?${params.toString()}`);
       if (!response.ok) throw new Error(`Download failed: ${response.status}`);
 
@@ -110,10 +104,17 @@ function MediaView({
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
       anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
+      anchor.style.display = 'none';
       document.body.appendChild(anchor);
+      
+      // Trigger click and ensure it completes before cleanup
       anchor.click();
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(objectUrl);
+      
+      // Delay cleanup to allow download to start
+      setTimeout(() => {
+        document.body.removeChild(anchor);
+        URL.revokeObjectURL(objectUrl);
+      }, 100);
     } catch (error) {
       console.error('Download failed:', error);
       // Fallback: open in new tab
