@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
@@ -8,6 +8,7 @@ import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT } from '../constants/apod.js';
 
 function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
+  const [isPending, startTransition] = useTransition();
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
