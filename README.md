@@ -1,201 +1,184 @@
-# NASA Astronomy Picture of the Day (APOD) Dashboard
+<div align="center">
 
-A modern, responsive web application that displays NASA's Astronomy Picture of the Day using React, Vite, and Bootstrap with a beautiful deep space purple theme.
+# 🌌 Celestial — NASA Astronomy Explorer
 
-## Features
+### Browse NASA's Astronomy Picture of the Day, EPIC Earth photos, and chat with an AI cosmic assistant.
 
-- 🚀 Displays today's APOD image or video
-- 📱 Fully responsive design with Bootstrap
-- 🎨 Beautiful purple "deep space" theme
-- ⚡ Built with React and Vite for fast development
-- 🔄 Real-time data fetching using useEffect hook
-- ⏳ Loading spinner while fetching data
-- ❌ Comprehensive error handling
-- 🛡️ Secure environment variable management for API key
+[![CI](https://github.com/Balance312/Celestial-the-Nasa-based-astronomy-website/actions/workflows/ci.yml/badge.svg)](https://github.com/Balance312/Celestial-the-Nasa-based-astronomy-website/actions/workflows/ci.yml)
+[![React](https://img.shields.io/badge/React-19.2-61DAFB?logo=react&logoColor=white)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-## Setup Instructions
+<br/>
 
-### 1. Install Dependencies
+![Celestial Preview](images/logo.png)
+
+<br/>
+
+**[✨ View Live Demo →](https://your-app.vercel.app)**&nbsp;&nbsp;•&nbsp;&nbsp;[Report a Bug](https://github.com/Balance312/Celestial-the-Nasa-based-astronomy-website/issues/new?template=bug_report.md)&nbsp;&nbsp;•&nbsp;&nbsp;[Request a Feature](https://github.com/Balance312/Celestial-the-Nasa-based-astronomy-website/issues/new?template=feature_request.md)
+
+</div>
+
+---
+
+## 📋 Table of Contents
+
+- [✨ Features](#-features)
+- [🛠️ Tech Stack](#%EF%B8%8F-tech-stack)
+- [🚀 Getting Started](#-getting-started)
+- [📁 Project Structure](#-project-structure)
+- [🔑 NASA API Reference](#-nasa-api-reference)
+- [🔒 Security](#-security)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| 🌠 APOD Dashboard | Today's Astronomy Picture of the Day with full explanation |
+| 🌍 EPIC Earth Photos | Browse real satellite images of Earth from NASA's EPIC camera |
+| 🤖 AI Cosmic Assistant | Chat with an AI assistant about space and astronomy |
+| 🎥 Video Support | Seamlessly embeds NASA video content via iframe |
+| 📱 Fully Responsive | Mobile-first design — looks great on any device |
+| 🎨 Deep Space Theme | Beautiful purple dark-mode UI inspired by the cosmos |
+| ⚡ Fast & Optimized | Vite build tooling with code-splitting and lazy loading |
+| 🛡️ Secure API Handling | API keys managed via environment variables, never exposed |
+
+---
+
+## 🛠️ Tech Stack
+
+| Technology | Purpose |
+|---|---|
+| [React 19](https://react.dev/) | UI component framework |
+| [Vite 7](https://vite.dev/) | Build tool & dev server |
+| [React Router 7](https://reactrouter.com/) | Client-side routing |
+| [Tailwind CSS 4](https://tailwindcss.com/) | Utility-first styling |
+| [Headless UI](https://headlessui.com/) | Accessible UI primitives |
+| [Heroicons](https://heroicons.com/) | SVG icon library |
+| [Bootstrap Icons](https://icons.getbootstrap.com/) | Additional icon set |
+| [NASA APIs](https://api.nasa.gov/) | Astronomy data (APOD, EPIC) |
+| [Vercel](https://vercel.com/) | Deployment & hosting |
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 18+ and npm
+- A free [NASA API key](https://api.nasa.gov/)
+
+### 1. Clone & Install
 
 ```bash
+git clone https://github.com/Balance312/Celestial-the-Nasa-based-astronomy-website.git
+cd Celestial-the-Nasa-based-astronomy-website
 npm install
 ```
 
-### 2. Configure NASA API Key
+### 2. Configure Environment Variables
 
-#### Option A: Using Environment Variables (Recommended for Security)
+```bash
+cp .env.example .env
+```
 
-1. The `.env` file already exists with your API key configured:
-   ```
-   VITE_NASA_API_KEY=your_api_key_here
-   ```
+Open `.env` and add your NASA API key:
 
-2. **Important**: The `.env` file is added to `.gitignore` to prevent accidental commits of sensitive data.
+```
+VITE_NASA_API_KEY=your_api_key_here
+```
 
-3. For sharing your project with others, use `.env.example` as a template:
-   ```bash
-   # Users should copy .env.example to .env and add their own API key
-   cp .env.example .env
-   ```
+> 💡 Get a free key at [https://api.nasa.gov/](https://api.nasa.gov/) — it takes under 2 minutes.
 
-#### Getting Your NASA API Key
-
-1. Visit [https://api.nasa.gov/](https://api.nasa.gov/)
-2. Fill out the form to request an API key
-3. Check your email and copy the API key
-4. Add it to your `.env` file:
-   ```
-   VITE_NASA_API_KEY=your_api_key_here
-   ```
-
-### 3. Run the Development Server
+### 3. Run the Dev Server
 
 ```bash
 npm run dev
 ```
 
-The app will be available at `http://localhost:5173` (or another port if 5173 is in use).
+Open [http://localhost:5173](http://localhost:5173) in your browser. 🎉
 
-### 4. Build for Production
+### Other Commands
 
 ```bash
-npm run build
+npm run build      # Production build
+npm run preview    # Preview production build locally
+npm run lint       # Run ESLint
+npm test           # Run Vitest test suite
 ```
-
-## Project Structure
-
-```
-src/
-├── App.jsx              # Main APOD dashboard component
-├── app.css             # Global styles + APOD component styles
-├── main.jsx            # Entry point (Bootstrap import)
-├── Components/
-│   ├── Navbar.jsx      # Navigation bar
-│   └── navbar.css      # Navbar styles
-└── Router.jsx          # Routing configuration
-```
-
-## How It Works
-
-### App Component (`App.jsx`)
-
-The main component uses React hooks:
-
-- **useState**: Manages three states
-  - `apodData`: Stores the API response data
-  - `loading`: Boolean indicating if data is being fetched
-  - `error`: Stores any error messages
-
-- **useEffect**: Runs on mount to fetch APOD data
-  - Retrieves API key from environment variables
-  - Makes request to NASA's APOD API
-  - Handles loading and error states
-  - Supports both images and videos
-
-### Environment Variables
-
-Vite uses the `import.meta.env` object to access environment variables:
-
-```javascript
-const apiKey = import.meta.env.VITE_NASA_API_KEY;
-```
-
-Only variables prefixed with `VITE_` are accessible in the frontend for security reasons.
-
-## Features Explained
-
-### Media Display
-- Displays images using `<img>` tag
-- Embeds videos using `<iframe>`
-- Automatically detects media type from API response
-
-### Error Handling
-- API key validation on component mount
-- Network error catching
-- User-friendly error messages
-
-### Loading State
-- Bootstrap spinner component
-- Loading text animation
-- Prevents showing stale data during fetch
-
-### Responsive Design
-- Mobile-first approach
-- Breakpoints for tablets and desktops
-- Optimized iframe height for mobile
-
-## Styling
-
-### Color Palette (Deep Space Purple Theme)
-
-```css
---primary-color: rgb(110, 14, 255)
---secondary-color: rgb(168, 85, 247)
---dark-bg: rgb(15, 12, 35)
---lighter-purple: d8b4fe
-```
-
-### Custom CSS Classes
-
-- `.apod-container`: Main container with padding and background
-- `.apod-card`: Card wrapper with gradient and border
-- `.apod-title`: Title with glow effect
-- `.apod-explanation`: Readable text styling
-- `.apod-info`: Footer with metadata badges
-
-## Security Best Practices
-
-1. ✅ API key stored in `.env` file
-2. ✅ `.env` file ignored by git
-3. ✅ `.env.example` provided as template for users
-4. ❌ Never hardcode API keys in source code
-5. ❌ Never commit `.env` files to version control
-
-## API Reference
-
-The app uses the NASA APOD API:
-
-**Endpoint**: `https://api.nasa.gov/planetary/apod`
-
-**Required Parameters**:
-- `api_key`: Your NASA API key
-
-**Optional Parameters**:
-- `date`: YYYY-MM-DD format (defaults to today)
-- `count`: Number of random images
-- `thumbs`: Return thumbnail version
-
-**Response Data Used**:
-- `url`: Image or video URL
-- `title`: Picture title
-- `date`: Picture date
-- `explanation`: Description text
-- `media_type`: "image" or "video"
-- `copyright`: Image credit (if available)
-
-## Troubleshooting
-
-### "NASA API key is not configured"
-- Check that `.env` file exists in root directory
-- Verify `VITE_NASA_API_KEY` is set in `.env`
-- Restart dev server after adding `.env` file
-
-### Images not loading
-- Verify API key is valid and active
-- Check NASA APOD API status at https://api.nasa.gov/
-
-### Styling issues
-- Clear browser cache
-- Restart dev server
-- Ensure Bootstrap CSS is imported in `main.jsx`
-
-## Technologies Used
-
-- **React 18**: UI framework
-- **Vite**: Build tool and dev server
-- **Bootstrap 5**: Responsive layout and components
-- **NASA API**: Astronomy data source
 
 ---
 
-**Last Updated**: 2026-04-15
+## 📁 Project Structure
+
+```
+├── src/
+│   ├── App.jsx              # Root app component
+│   ├── Router.jsx           # Route definitions
+│   ├── main.jsx             # Entry point
+│   ├── app.css              # Global styles
+│   ├── Components/          # Shared components (Navbar, etc.)
+│   ├── pages/               # Page-level components
+│   ├── constants/           # App-wide constants & config
+│   └── utils/               # Helper utilities
+├── api/                     # Vercel serverless API routes
+├── public/                  # Static assets
+├── images/                  # Image assets
+├── docs/                    # Additional documentation
+├── .env.example             # Environment variable template
+├── vercel.json              # Vercel deployment config
+└── vite.config.js           # Vite configuration
+```
+
+---
+
+## 🔑 NASA API Reference
+
+This app uses the following NASA APIs (all free with an API key):
+
+| API | Endpoint | Used For |
+|---|---|---|
+| APOD | `GET /planetary/apod` | Astronomy Picture of the Day |
+| EPIC | `GET /EPIC/api/natural` | Earth satellite imagery |
+
+**Common Parameters**
+
+| Parameter | Type | Description |
+|---|---|---|
+| `api_key` | string | Your NASA API key (required) |
+| `date` | YYYY-MM-DD | Specific date (defaults to today) |
+| `count` | number | Number of random images |
+| `thumbs` | boolean | Return video thumbnail URL |
+
+---
+
+## 🔒 Security
+
+- ✅ API keys stored in `.env` (never committed to git)
+- ✅ `.env.example` template provided for contributors
+- ✅ Serverless API routes in `/api` proxy sensitive calls
+- ❌ Never hardcode API keys in source code
+
+See [SECURITY.md](.github/SECURITY.md) for vulnerability reporting.
+
+---
+
+## 🤝 Contributing
+
+Contributions are welcome! Please read [CONTRIBUTING.md](.github/CONTRIBUTING.md) for guidelines on how to get started, coding standards, and the pull request process.
+
+---
+
+## 📄 License
+
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
+
+---
+
+<div align="center">
+Made with ❤️ and powered by <a href="https://api.nasa.gov/">NASA Open APIs</a>
+</div>
