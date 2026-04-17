@@ -1,4 +1,5 @@
 const NASA_API_BASE = "https://api.nasa.gov/planetary/apod";
+const EPIC_API_BASE = "https://api.nasa.gov/EPIC/api/natural";
 const DEFAULT_TIMEOUT_MS = 5000;
 const MAX_RETRIES = 3;
 const INITIAL_RETRY_DELAY_MS = 1000;
@@ -7,9 +8,12 @@ const CACHE_MAX_AGE = {
   apodByDate: 1000 * 60 * 60 * 24 * 30,
   apodToday: 1000 * 60 * 60 * 24,
   gallery: 1000 * 60 * 10,
+  epic: 1000 * 60 * 60 * 6, // 6 hours
 };
 
 const getTodayDateString = () => new Date().toISOString().split("T")[0];
+
+
 
 const readCache = (key, maxAgeMs) => {
   try {
@@ -172,3 +176,59 @@ export const clearApiCache = () => {
 export const clearCacheKey = (key) => {
   localStorage.removeItem(key);
 };
+
+// Get latest EPIC imagery
+export const getEpicLatest = async (apiKey, options = {}) => {
+  const { signal, preferCache = true } = options;
+  const cacheKey = `nasa:epic:latest`;
+
+  if (preferCache) {
+    const cached = readCache(cacheKey, CACHE_MAX_AGE.epic);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  const data = await fetchWithRetry(
+    `${EPIC_API_BASE}?api_key=${apiKey}&limit=20`,
+    { signal },
+  );
+
+  writeCache(cacheKey, data);
+  return data;
+};
+
+// Get EPIC imagery for specific date
+export const getEpicByDate = async (apiKey, date, options = {}) => {
+  const { signal, preferCache = true } = options;
+  const cacheKey = `nasa:epic:date:${date}`;
+
+  if (preferCache) {
+    const cached = readCache(cacheKey, CACHE_MAX_AGE.epic);
+    if (cached) {
+      return cached;
+    }
+  }
+
+  const data = await fetchWithRetry(
+    `${EPIC_API_BASE}/date/${date}?api_key=${apiKey}`,
+    { signal },
+  );
+
+  writeCache(cacheKey, data);
+  return data;
+};
+
+// Get EPIC image URL
+export const getEpicImageUrl = (date, image, apiKey = '') => {
+  // Format date as YYYY-MM-DD
+  const year = date.slice(0, 4);
+  const month = date.slice(5, 7);
+  const day = date.slice(8, 10);
+  const imageFileName = image.image || 'epic_image';
+  
+  const url = `https://api.nasa.gov/EPIC/archive/natural/${year}/${month}/${day}/png/${imageFileName}.png`;
+  return apiKey ? `${url}?api_key=${apiKey}` : url;
+};
+
+

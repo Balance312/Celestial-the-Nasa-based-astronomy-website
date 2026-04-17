@@ -1,14 +1,10 @@
-import { useEffect, useState, useCallback, useMemo, useRef, useTransition } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
-
-const sanitizeFilename = (value) =>
-  (value || 'nasa-image')
-    .replace(/[^a-z0-9\s-]/gi, '')
-    .trim()
-    .replace(/\s+/g, '-')
-    .toLowerCase();
+import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
+import { getNasaApiKey } from '../utils/apiConfig.js';
+import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT } from '../constants/apod.js';
 
 function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
@@ -19,7 +15,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState(null);
-  const [isPending, startTransition] = useTransition();
   const closeModalRef = useRef(null);
 
   useEffect(() => {
@@ -36,12 +31,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       setLoading(true);
       setError(null);
 
-      const apiKey = import.meta.env.VITE_NASA_API_KEY;
-      if (!apiKey) {
-        throw new Error('NASA API key is not configured.');
-      }
-
-      const data = await getRandomGallery(apiKey, 8, { signal, preferCache });
+      const apiKey = getNasaApiKey();
+      const data = await getRandomGallery(apiKey, GALLERY_ITEMS_COUNT, { signal, preferCache });
       setGallery(data);
     } catch (err) {
       if (err.name === 'AbortError') {
@@ -50,13 +41,13 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
       let errorMessage = 'Failed to load gallery';
       if (err.message.includes('503')) {
-        errorMessage = 'NASA API temporarily unavailable. Retrying... If this persists, please try again later.';
+        errorMessage = API_ERROR_MESSAGES.UNAVAILABLE;
       } else if (err.message.includes('502')) {
-        errorMessage = 'Bad gateway error from NASA API. Please try again in a few moments.';
+        errorMessage = API_ERROR_MESSAGES.BAD_GATEWAY;
       } else if (err.message.includes('429')) {
-        errorMessage = 'API rate limit reached. Please wait a moment before trying again.';
+        errorMessage = API_ERROR_MESSAGES.RATE_LIMIT;
       } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
+        errorMessage = API_ERROR_MESSAGES.NETWORK;
       }
       
       setError(errorMessage);
@@ -173,6 +164,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
             className="btn btn-primary"
             onClick={() => fetchRandomGallery({ preferCache: false })}
             disabled={loading}
+            aria-label="Load new images from NASA gallery"
+            title="Refresh to load 8 new random NASA images"
             style={loading ? { pointerEvents: 'none' } : {}}
           >
             {loading ? '⏳ Loading...' : '🔄 Load New Images'}
@@ -204,7 +197,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
         {!loading && gallery.length > 0 && (
           <>
-            <div className="gallery-grid">
+            <div className="gallery-grid" role="grid" aria-label="Gallery of NASA images and videos">
               {gallery.map((item) => {
                 const itemId = `${item.date}-${item.title}`;
                 const itemIsFavorited = isFavorited(item);
@@ -214,6 +207,15 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                     key={itemId}
                     className="gallery-item"
                     onClick={() => handleGalleryItemClick(item)}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open ${item.media_type === 'image' ? 'image' : 'video'}: ${item.title}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        handleGalleryItemClick(item);
+                      }
+                    }}
                   >
                     <div className="gallery-thumbnail">
                       {item.media_type === 'image' ? (
@@ -252,6 +254,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                           onClick={(event) => handleDownload(event, item)}
                           disabled={item.media_type !== 'image' || downloadingId === item.date}
                           title={item.media_type === 'image' ? 'Download image' : 'Download is only available for images'}
+                          aria-label={`Download ${item.title}`}
+                          aria-busy={downloadingId === item.date}
                         >
                           <i className={`bi ${downloadingId === item.date ? 'bi-hourglass-split' : 'bi-download'}`}></i>
                           {downloadingId === item.date ? 'Downloading...' : 'Download'}
@@ -268,6 +272,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                             }
                             addToFavorites(item);
                           }}
+                          aria-label={itemIsFavorited ? `Remove ${item.title} from favorites` : `Add ${item.title} to favorites`}
+                          aria-pressed={itemIsFavorited}
                         >
                           <i className={`bi ${itemIsFavorited ? 'bi-heart-fill' : 'bi-heart'}`}></i>
                           {itemIsFavorited ? 'Saved' : 'Favorite'}

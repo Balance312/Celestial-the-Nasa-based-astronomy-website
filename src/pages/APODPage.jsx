@@ -1,7 +1,10 @@
-import { useEffect, useState, useCallback, useRef, useTransition, useMemo } from 'react';
+import { useEffect, useState, useCallback, useTransition, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getApodByDate } from '../utils/nasaApi.js';
+import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
+import { getNasaApiKey } from '../utils/apiConfig.js';
+import { APOD_START_DATE, DATE_MESSAGES, API_ERROR_MESSAGES } from '../constants/apod.js';
 
 
 
@@ -21,25 +24,16 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [isFullImageOpen, setIsFullImageOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchAPOD(selectedDate, controller.signal);
+  // Pre-memoize today's date to avoid recalculation
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-    return () => {
-      controller.abort();
-    };
-  }, [selectedDate]);
-
-  const fetchAPOD = async (date, signal) => {
+  // Fetch APOD data - declared before useEffect
+  const fetchAPOD = useCallback(async (date, signal) => {
     try {
       setLoading(true);
       setError(null);
 
-      const apiKey = import.meta.env.VITE_NASA_API_KEY;
-      if (!apiKey) {
-        throw new Error('NASA API key is not configured. Please check your .env file.');
-      }
-
+      const apiKey = getNasaApiKey();
       const data = await getApodByDate(apiKey, date, { signal, preferCache: true });
       setApodData(data);
     } catch (err) {
@@ -49,13 +43,13 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
       let errorMessage = 'Failed to load APOD data';
       if (err.message.includes('503')) {
-        errorMessage = 'NASA API temporarily unavailable. Retrying... If this persists, please try again later.';
+        errorMessage = API_ERROR_MESSAGES.UNAVAILABLE;
       } else if (err.message.includes('502')) {
-        errorMessage = 'Bad gateway error from NASA API. Please try again in a few moments.';
+        errorMessage = API_ERROR_MESSAGES.BAD_GATEWAY;
       } else if (err.message.includes('429')) {
-        errorMessage = 'API rate limit reached. Please wait a moment before trying again.';
+        errorMessage = API_ERROR_MESSAGES.RATE_LIMIT;
       } else if (err.message.includes('Failed to fetch')) {
-        errorMessage = 'Network error. Please check your connection and try again.';
+        errorMessage = API_ERROR_MESSAGES.NETWORK;
       }
       
       setError(errorMessage);
@@ -65,10 +59,16 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         setLoading(false);
       }
     }
-  };
+  }, []);
 
-  // Pre-memoize today's date to avoid recalculation
-  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchAPOD(selectedDate, controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedDate, fetchAPOD]);
   
   // Memoize formatted date for display
   const formattedDate = useMemo(() => {
@@ -79,7 +79,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       month: 'long',
       day: 'numeric',
     });
-  }, [apodData?.date]);
+  }, [apodData]);
 
   // Helper function to add/subtract days from YYYY-MM-DD string
   const addDaysToDateString = useCallback((dateStr, days) => {
@@ -94,13 +94,13 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const goToPreviousDay = useCallback(() => {
     const newDateStr = addDaysToDateString(selectedDate, -1);
     
-    if (newDateStr >= '1995-06-16') {
+    if (newDateStr >= APOD_START_DATE) {
       startTransition(() => {
         setSelectedDate(newDateStr);
         setError(null);
       });
     } else {
-      setError('APOD photos started on June 16, 1995. Please select a date from June 16, 1995 onwards.');
+      setError(DATE_MESSAGES.BEFORE_START);
     }
   }, [selectedDate, addDaysToDateString]);
 
@@ -113,7 +113,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         setError(null);
       });
     } else {
-      setError('Cannot select future dates. Please select today or an earlier date.');
+      setError(DATE_MESSAGES.FUTURE);
     }
   }, [selectedDate, addDaysToDateString, todayStr]);
 
@@ -125,15 +125,14 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
   const handleDateChange = useCallback((e) => {
     const newDate = e.target.value;
-    const minDateStr = '1995-06-16';
     
-    if (newDate < minDateStr) {
-      setError('APOD photos started on June 16, 1995. Please select a date from June 16, 1995 onwards.');
+    if (newDate < APOD_START_DATE) {
+      setError(DATE_MESSAGES.BEFORE_START);
       return;
     }
     
     if (newDate > todayStr) {
-      setError('Cannot select future dates. Please select today or an earlier date.');
+      setError(DATE_MESSAGES.FUTURE);
       return;
     }
     
@@ -164,45 +163,6 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setIsFullImageOpen(false);
   }, []);
 
-  const isMobileDevice = useCallback(() => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  }, []);
-
-  const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
-    try {
-      const params = new URLSearchParams({
-        url: downloadUrl,
-        title: itemTitle,
-        date: itemDate,
-      });
-
-      // Use blob download for all devices (more reliable)
-      const response = await fetch(`/api/download?${params.toString()}`);
-      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = filename.replace(/\.jpeg$/i, '.jpg');
-      link.style.display = 'none';
-      document.body.appendChild(link);
-      
-      // Trigger click and ensure it completes before cleanup
-      link.click();
-      
-      // Delay cleanup to allow download to start
-      setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(objectUrl);
-      }, 100);
-    } catch (error) {
-      console.error('Download failed:', error);
-      // Fallback: open in new tab
-      window.open(downloadUrl, '_blank');
-    }
-  };
-
   const handleDownloadImage = useCallback(async () => {
     if (!downloadImageUrl || !apodData) {
       return;
@@ -212,10 +172,15 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setError(null);
 
     try {
-      const filename = 'nasa-image.jpg';
+      const filename = `${sanitizeFilename(apodData.title)}.jpg`;
       await downloadFile(downloadImageUrl, filename, apodData.title, apodData.date);
     } catch (downloadError) {
-      setError('Download failed. Please try again or check your connection.');
+      const errorMessage = downloadError.message?.includes('Network')
+        ? 'Network error: Check your connection'
+        : downloadError.message?.includes('blob')
+        ? 'Failed to process file'
+        : 'Download failed. Please try again.';
+      setError(errorMessage);
       console.error('Download failed:', downloadError);
     } finally {
       setIsDownloading(false);
@@ -250,7 +215,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                 value={selectedDate}
                 onChange={handleDateChange}
                 className="date-picker"
-                min="1995-06-16"
+                min={APOD_START_DATE}
                 max={todayStr}
               />
               <span className="date-label">Select Date</span>

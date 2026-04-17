@@ -165,7 +165,7 @@
 
 .date-label {
   font-size: 0.8rem;
-  color: rgba(216, 180, 254, 0.6);
+  color: rgba(216, 180, 254, 0.92);
   position: absolute;
   top: -18px;
   left: 0;
@@ -227,7 +227,7 @@
 }
 
 .meta-item {
-  color: rgba(216, 180, 254, 0.8);
+  color: rgba(216, 180, 254, 0.95);
   font-size: 0.95rem;
   display: flex;
   align-items: center;
@@ -388,7 +388,7 @@
 }
 
 .gallery-date {
-  color: rgba(216, 180, 254, 0.6);
+  color: rgba(216, 180, 254, 0.92);
   font-size: 0.85rem;
   margin: 0;
   min-height: 20px;
@@ -529,7 +529,7 @@
 }
 
 .modal-info .text-muted {
-  color: rgba(216, 180, 254, 0.6) !important;
+  color: rgba(216, 180, 254, 0.92) !important;
   font-size: 0.9rem;
   margin-bottom: 15px;
 }
@@ -605,7 +605,7 @@
   padding: 60px 30px;
   text-align: center;
   font-size: 3rem;
-  color: rgba(110, 14, 255, 0.5);
+  color: rgba(110, 14, 255, 0.75);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1078,7 +1078,7 @@
 
 /* Media Display Container */
 .media-display {
-  width: fit-content;
+  width: 100%;
   max-width: 100%;
   margin: 0 auto;
   background: linear-gradient(135deg, rgba(15, 12, 35, 0.95) 0%, rgba(30, 20, 60, 0.95) 100%);
@@ -1090,6 +1090,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  aspect-ratio: 16 / 9;
 }
 
 @keyframes slideInDown {
@@ -1113,24 +1114,19 @@
 }
 
 .media-video-wrapper {
-  width: 100%;
-  background: rgba(0, 0, 0, 0.8);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  aspect-ratio: 16 / 9;
-  padding: 20px;
+  display: none;
 }
 
 .media-video-wrapper .ratio {
-  width: 100%;
-  height: 100%;
+  display: none;
 }
 
 .media-iframe {
   width: 100%;
   height: 100%;
   border: none;
+  display: block;
+  background: rgba(0, 0, 0, 0.8);
 }
 
 /* Controls Bar */
@@ -1535,3 +1531,339 @@
     padding: 8px 10px;
   }
 }
+
+/* ===== EPIC PAGE ===== */
+.epic-page {
+  background: linear-gradient(135deg, rgb(15, 12, 35) 0%, rgb(25, 20, 50) 50%, rgb(15, 12, 35) 100%);
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.epic-hero {
+  background: linear-gradient(135deg, rgba(15, 12, 35, 0.95), rgba(30, 100, 200, 0.3));
+  border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+}
+
+.epic-page .page-title {
+  background: linear-gradient(135deg, #3b82f6, #60a5fa);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.date-navigation-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 40px;
+}
+
+.epic-controls {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  padding: 20px;
+  background: rgba(59, 130, 246, 0.05);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.epic-info-banner {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(96, 165, 250, 0.1));
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.epic-info-banner i {
+  color: rgb(59, 130, 246);
+  flex-shrink: 0;
+  font-size: 1.1rem;
+  margin-top: 2px;
+}
+
+.epic-info-banner strong {
+  color: rgb(96, 165, 250);
+  font-weight: 600;
+}
+
+.epic-main-container {
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.08) 0%, rgba(96, 165, 250, 0.05) 100%);
+  border: 2px solid rgba(59, 130, 246, 0.3);
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 12px 40px rgba(59, 130, 246, 0.2);
+  transition: all 0.3s ease;
+}
+
+.epic-main-container:hover {
+  border-color: rgba(59, 130, 246, 0.6);
+  box-shadow: 0 16px 50px rgba(59, 130, 246, 0.3);
+}
+
+.epic-image-display {
+  width: 100%;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+  min-height: 300px;
+}
+
+.epic-image {
+  width: 100%;
+  height: auto;
+  max-height: 600px;
+  object-fit: contain;
+  display: block;
+}
+
+.epic-details {
+  padding: 40px;
+}
+
+.epic-header {
+  margin-bottom: 30px;
+  border-bottom: 2px solid rgba(59, 130, 246, 0.2);
+  padding-bottom: 20px;
+}
+
+.epic-title {
+  font-size: 2rem;
+  font-weight: 800;
+  color: rgb(59, 130, 246);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.epic-subtitle {
+  color: rgba(196, 181, 253, 0.95);
+  font-size: 0.95rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.epic-meta {
+  display: flex;
+  gap: 30px;
+  flex-wrap: wrap;
+  margin-bottom: 30px;
+  padding: 20px;
+  background: rgba(59, 130, 246, 0.1);
+  border-radius: 10px;
+  border-left: 4px solid rgb(59, 130, 246);
+}
+
+.epic-meta .meta-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.epic-meta .meta-item i {
+  color: rgb(59, 130, 246);
+  font-size: 1.2rem;
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.epic-meta .meta-item > div {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.meta-label {
+  color: rgba(147, 197, 253, 0.9595);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.meta-value {
+  color: rgba(255, 255, 255, 0.988);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.epic-description {
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.8;
+  font-size: 0.95rem;
+}
+
+.epic-description p {
+  margin-bottom: 15px;
+}
+
+.epic-description strong {
+  color: rgb(96, 165, 250);
+  font-weight: 600;
+}
+
+.epic-gallery-section {
+  margin-top: 50px;
+  background: rgba(59, 130, 246, 0.05);
+  padding: 30px;
+  border-radius: 15px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.gallery-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.epic-gallery-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: rgb(59, 130, 246);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.gallery-subtitle {
+  color: rgba(147, 197, 253, 0.95);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.epic-thumbnail-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 12px;
+}
+
+.epic-thumbnail-btn {
+  position: relative;
+  background: none;
+  border: 2px solid rgba(59, 130, 246, 0.2);
+  border-radius: 10px;
+  cursor: pointer;
+  padding: 0;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  aspect-ratio: 1;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.epic-thumbnail-btn:hover {
+  border-color: rgba(59, 130, 246, 0.8);
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+  transform: translateY(-4px) scale(1.02);
+}
+
+.epic-thumbnail-btn.active {
+  border-color: rgb(59, 130, 246);
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.6);
+  background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(96, 165, 250, 0.15));
+  border-width: 3px;
+}
+
+.epic-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.epic-thumbnail-time {
+  position: absolute;
+  bottom: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: rgba(255, 255, 255, 0.9);
+  padding: 3px 8px;
+  font-size: 0.65rem;
+  border-radius: 4px;
+  font-weight: 600;
+  pointer-events: none;
+  backdrop-filter: blur(4px);
+}
+
+@media (max-width: 1024px) {
+  .epic-details {
+    padding: 30px;
+  }
+
+  .epic-title {
+    font-size: 1.75rem;
+  }
+
+  .epic-meta {
+    gap: 20px;
+  }
+
+  .epic-thumbnail-grid {
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .epic-page .page-title {
+    font-size: 1.8rem;
+  }
+
+  .epic-gallery-section {
+    padding: 20px;
+  }
+
+  .epic-details {
+    padding: 20px;
+  }
+
+  .epic-title {
+    font-size: 1.4rem;
+  }
+
+  .epic-meta {
+    flex-direction: column;
+    gap: 15px;
+    padding: 15px;
+  }
+
+  .epic-thumbnail-grid {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    gap: 10px;
+  }
+
+  .date-controls {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .date-controls button {
+    width: 100%;
+  }
+
+  .date-input-wrapper {
+    width: 100%;
+  }
+
+  .date-picker {
+    width: 100%;
+  }
+
+  .epic-image-display {
+    min-height: 250px;
+  }
+}
+
+

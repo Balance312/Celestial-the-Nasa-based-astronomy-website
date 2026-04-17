@@ -38,6 +38,11 @@ function Navbar({ favoritesCount }) {
                 </NavLink>
               </li>
               <li className="nav-item">
+                <NavLink className="nav-link" to="/epic">
+                  Earth EPIC
+                </NavLink>
+              </li>
+              <li className="nav-item">
                 <NavLink className="nav-link" to="/profile">
                   My Space Collection
                   <span className="badge rounded-pill collection-badge ms-2">{favoritesCount}</span>

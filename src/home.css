@@ -332,7 +332,7 @@ body {
 }
 
 .footer-text {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.85);
     font-size: 0.95rem;
 }
 
@@ -346,7 +346,7 @@ body {
 }
 
 .footer-links a {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.85);
     text-decoration: none;
     transition: all 0.3s ease;
 }
@@ -450,7 +450,7 @@ body {
 
 .stat-label {
     font-size: 1rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* Pricing Section */
@@ -511,7 +511,7 @@ body {
 
 .pricing-period {
     font-size: 1rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 .pricing-features {
@@ -600,13 +600,13 @@ body {
 
 .author-role {
     font-size: 0.9rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.85);
 }
 
 /* Hero Description */
 .hero-description {
     font-size: 1.1rem;
-    color: rgba(255, 255, 255, 0.7);
+    color: rgba(255, 255, 255, 0.85);
     margin-bottom: 2rem;
     line-height: 1.6;
     animation: slideInLeft 1.3s ease-out;
@@ -646,7 +646,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 3rem;
-    color: rgba(110, 14, 255, 0.5);
+    color: rgba(110, 14, 255, 0.75);
 }
 
 .preview-title {
@@ -661,7 +661,7 @@ body {
 
 .preview-date {
     font-size: 0.95rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.85);
     margin-bottom: 1.5rem;
     min-height: 28px;
     contain: layout;

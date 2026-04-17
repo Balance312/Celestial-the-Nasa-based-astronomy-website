@@ -15,9 +15,7 @@ function Profile({ favorites, removeFromFavorites }) {
     setTimeout(() => setCacheCleared(false), 3000);
   }, []);
 
-  const isMobileDevice = () => {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
+
 
   const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
     try {
@@ -149,7 +147,7 @@ function Profile({ favorites, removeFromFavorites }) {
                     <div className="mt-auto d-flex gap-2 pt-3">
                       <button
                         className="btn btn-outline-light btn-sm"
-                        onClick={() => navigate(`/media/${item.date}`)}
+                        onClick={() => navigate(`/media/${item.id || item.date}`, { state: { image: item } })}
                       >
                         <i className="bi bi-arrows-fullscreen me-1"></i>
                         View Full Image

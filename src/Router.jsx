@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar from "./Components/Navbar.jsx";
+import FloatingChatBubble from "./Components/FloatingChatBubble.jsx";
 import SeoManager from "./Components/SeoManager.jsx";
 
 const Home = lazy(() => import("./Home.jsx"));
@@ -9,6 +10,8 @@ const GalleryPage = lazy(() => import("./pages/GalleryPage.jsx"));
 const AboutPage = lazy(() => import("./pages/AboutPage.jsx"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
 const MediaView = lazy(() => import("./pages/MediaView.jsx"));
+const EpicPage = lazy(() => import("./pages/EpicPage.jsx"));
+const ChatBot = lazy(() => import("./pages/ChatBot.jsx"));
 
 function Router({
   favorites,
@@ -20,6 +23,7 @@ function Router({
     <BrowserRouter>
       <SeoManager />
       <Navbar favoritesCount={favorites.length} />
+      <FloatingChatBubble />
       <Suspense
         fallback={
           <div className="spinner-container">
@@ -52,6 +56,7 @@ function Router({
               />
             }
           />
+          <Route path="/epic" element={<EpicPage />} />
           <Route
             path="/media/:date"
             element={
@@ -67,6 +72,7 @@ function Router({
             path="/profile"
             element={<Profile favorites={favorites} removeFromFavorites={removeFromFavorites} />}
           />
+          <Route path="/chat" element={<ChatBot />} />
         </Routes>
       </Suspense>
     </BrowserRouter>

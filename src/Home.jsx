@@ -2,6 +2,7 @@ import "./home.css"
 import { Link } from "react-router-dom"
 import { useState, useEffect } from "react"
 import { getTodayApod } from "./utils/nasaApi.js"
+import { getNasaApiKey } from "./utils/apiConfig.js"
 
 function Home() {
   const [todayAPOD, setTodayAPOD] = useState(null);
@@ -12,8 +13,7 @@ function Home() {
 
     const fetchTodayAPOD = async () => {
       try {
-        const apiKey = import.meta.env.VITE_NASA_API_KEY;
-        if (!apiKey) return;
+        const apiKey = getNasaApiKey();
 
         const data = await getTodayApod(apiKey, {
           signal: controller.signal,
@@ -72,10 +72,10 @@ function Home() {
             <div className="row">
               <div className="col-lg-6 mb-4">
                 {todayAPOD.media_type === 'image' ? (
-                  <img 
-                    src={todayAPOD.url} 
-                    alt={todayAPOD.title} 
-                    className="preview-image" 
+                  <img
+                    src={todayAPOD.url}
+                    alt={todayAPOD.title}
+                    className="preview-image"
                     loading="eager"
                     decoding="async"
                     width="100%"
@@ -226,11 +226,9 @@ function Home() {
               </ul>
             </div>
             <div className="col-lg-3 col-md-6 mb-4">
-              <h5 className="footer-title">Connect</h5>
+              <h5 className="footer-title">give us a star here ❤️</h5>
               <ul className="footer-links">
-                <li><a href="#">Twitter</a></li>
-                <li><a href="#">Facebook</a></li>
-                <li><a href="#">Instagram</a></li>
+                <li><a href="https://github.com/Balance312/Celestial-the-Nasa-based-astronomy-website" target="_blank" rel="noopener noreferrer">GitHub repo</a></li>
               </ul>
             </div>
           </div>
