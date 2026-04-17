@@ -15,6 +15,44 @@ function Profile({ favorites, removeFromFavorites }) {
     setTimeout(() => setCacheCleared(false), 3000);
   }, []);
 
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
+    try {
+      const params = new URLSearchParams({
+        url: downloadUrl,
+        title: itemTitle,
+        date: itemDate,
+      });
+
+      // For mobile devices, use direct redirect which is more reliable
+      if (isMobileDevice()) {
+        window.location.href = `/api/download?${params.toString()}`;
+        return;
+      }
+
+      // For desktop, use blob download for better UX
+      const response = await fetch(`/api/download?${params.toString()}`);
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      window.open(downloadUrl, '_blank');
+    }
+  };
+
   const handleDownload = useCallback(async (item) => {
     if (item.media_type !== 'image') {
       return;
@@ -23,38 +61,10 @@ function Profile({ favorites, removeFromFavorites }) {
     setDownloadingId(item.id);
     setDownloadError(null);
 
-    const downloadUrl = item.hdurl || item.url;
-    const params = new URLSearchParams({
-      url: downloadUrl,
-      title: item.title,
-      date: item.date,
-    });
-
     try {
-      const response = await fetch(`/api/download?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status}`);
-      }
-
-      const contentDisposition = response.headers.get('content-disposition') || '';
-      let filename = `${item.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim().replace(/\s+/g, '_')}.jpg`;
-      
-      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-      if (filenameMatch) {
-        filename = filenameMatch[1];
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(objectUrl);
+      const downloadUrl = item.hdurl || item.url;
+      const filename = `${item.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim().replace(/\s+/g, '_')}.jpg`;
+      await downloadFile(downloadUrl, filename, item.title, item.date);
     } catch (error) {
       console.error('Download failed:', error);
       setDownloadError('Download failed. Please check your connection and try again.');

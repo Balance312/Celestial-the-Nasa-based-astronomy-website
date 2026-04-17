@@ -11,11 +11,9 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // Default to a past date that NASA has data for (yesterday)
+  // Default to today's date
   const getDefaultDate = () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    return yesterday.toISOString().split('T')[0];
+    return new Date().toISOString().split('T')[0];
   };
   
   const [selectedDate, setSelectedDate] = useState(getDefaultDate());
@@ -158,6 +156,44 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setIsFullImageOpen(false);
   };
 
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
+    try {
+      const params = new URLSearchParams({
+        url: downloadUrl,
+        title: itemTitle,
+        date: itemDate,
+      });
+
+      // For mobile devices, use direct redirect which is more reliable
+      if (isMobileDevice()) {
+        window.location.href = `/api/download?${params.toString()}`;
+        return;
+      }
+
+      // For desktop, use blob download for better UX
+      const response = await fetch(`/api/download?${params.toString()}`);
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename.replace(/\.jpeg$/i, '.jpg');
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      window.open(downloadUrl, '_blank');
+    }
+  };
+
   const handleDownloadImage = useCallback(async () => {
     if (!downloadImageUrl || !apodData) {
       return;
@@ -166,37 +202,9 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setIsDownloading(true);
     setError(null);
 
-    const params = new URLSearchParams({
-      url: downloadImageUrl,
-      title: apodData.title,
-      date: apodData.date,
-    });
-
     try {
-      const response = await fetch(`/api/download?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status}`);
-      }
-
-      const contentDisposition = response.headers.get('content-disposition') || '';
-      let filename = 'nasa-image.jpg';
-      
-      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-      if (filenameMatch) {
-        filename = filenameMatch[1];
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = objectUrl;
-      link.download = filename;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(objectUrl);
+      const filename = 'nasa-image.jpg';
+      await downloadFile(downloadImageUrl, filename, apodData.title, apodData.date);
     } catch (downloadError) {
       setError('Download failed. Please try again or check your connection.');
       console.error('Download failed:', downloadError);

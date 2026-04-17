@@ -83,43 +83,53 @@ function MediaView({
     }
   }, [date]);
 
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
+    try {
+      const params = new URLSearchParams({
+        url: downloadUrl,
+        title: itemTitle,
+        date: itemDate,
+      });
+
+      // For mobile devices, use direct redirect which is more reliable
+      if (isMobileDevice()) {
+        window.location.href = `/api/download?${params.toString()}`;
+        return;
+      }
+
+      // For desktop, use blob download for better UX
+      const response = await fetch(`/api/download?${params.toString()}`);
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      window.open(downloadUrl, '_blank');
+    }
+  };
+
   const handleDownload = useCallback(async () => {
     if (!media || media.media_type !== 'image') {
       return;
     }
 
-    const downloadUrl = media.hdurl || media.url;
-    const params = new URLSearchParams({
-      url: downloadUrl,
-      title: media.title,
-      date: media.date,
-    });
-
     try {
-      const response = await fetch(`/api/download?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status}`);
-      }
-
-      const contentDisposition = response.headers.get('content-disposition') || '';
-      let filename = `${sanitizeFilename(media.title)}.jpg`;
-
-      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-      if (filenameMatch) {
-        filename = filenameMatch[1];
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = filename;
-      document.body.appendChild(anchor);
-      anchor.click();
-      document.body.removeChild(anchor);
-      URL.revokeObjectURL(objectUrl);
+      const downloadUrl = media.hdurl || media.url;
+      const filename = `${sanitizeFilename(media.title)}.jpg`;
+      await downloadFile(downloadUrl, filename, media.title, media.date);
     } catch (error) {
       console.error('Download failed:', error);
       // Fallback: open image in new tab

@@ -99,6 +99,44 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setIsFullscreenMediaOnly(false);
   }, []);
 
+  const isMobileDevice = () => {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  };
+
+  const downloadFile = async (downloadUrl, filename) => {
+    try {
+      const params = new URLSearchParams({
+        url: downloadUrl,
+        title: filename.replace(/\.jpg$/i, ''),
+        date: new Date().toISOString().split('T')[0],
+      });
+
+      // For mobile devices, use direct redirect which is more reliable
+      if (isMobileDevice()) {
+        window.location.href = `/api/download?${params.toString()}`;
+        return;
+      }
+
+      // For desktop, use blob download for better UX
+      const response = await fetch(`/api/download?${params.toString()}`);
+      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
+
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = objectUrl;
+      anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
+      document.body.appendChild(anchor);
+      anchor.click();
+      document.body.removeChild(anchor);
+      URL.revokeObjectURL(objectUrl);
+    } catch (error) {
+      console.error('Download failed:', error);
+      // Fallback: open in new tab
+      window.open(downloadUrl, '_blank');
+    }
+  };
+
   const handleDownload = useCallback(async (event, item) => {
     event.stopPropagation();
 
@@ -136,7 +174,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
-      anchor.download = filename;
+      // Ensure .jpg extension for maximum compatibility
+      anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
       document.body.appendChild(anchor);
       anchor.click();
       document.body.removeChild(anchor);

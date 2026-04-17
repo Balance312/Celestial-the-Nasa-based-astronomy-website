@@ -33,7 +33,12 @@ export default async function handler(req, res) {
     }
 
     const contentType = upstream.headers.get('content-type') || 'application/octet-stream';
-    const extensionFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+    let extensionFromType = contentType.split('/')[1]?.split(';')[0] || 'jpg';
+    
+    // Normalize common image extensions
+    if (extensionFromType === 'jpeg') {
+      extensionFromType = 'jpg';
+    }
     const safeTitle = String(title)
       .replace(/[^a-zA-Z0-9-_ ]/g, '')
       .trim()
