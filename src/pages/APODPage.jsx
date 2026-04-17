@@ -10,7 +10,15 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
+  
+  // Default to a past date that NASA has data for (yesterday)
+  const getDefaultDate = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    return yesterday.toISOString().split('T')[0];
+  };
+  
+  const [selectedDate, setSelectedDate] = useState(getDefaultDate());
   const [isFullImageOpen, setIsFullImageOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
