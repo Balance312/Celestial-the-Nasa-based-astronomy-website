@@ -155,6 +155,13 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     });
 
     try {
+      // For mobile devices, redirect to download endpoint (more reliable on phones)
+      if (isMobileDevice()) {
+        window.location.href = `/api/download?${params.toString()}`;
+        return;
+      }
+
+      // For desktop, use blob download for better UX
       const response = await fetch(`/api/download?${params.toString()}`);
 
       if (!response.ok) {
@@ -174,7 +181,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
       const anchor = document.createElement('a');
       anchor.href = objectUrl;
-      // Ensure .jpg extension for maximum compatibility
       anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
       document.body.appendChild(anchor);
       anchor.click();

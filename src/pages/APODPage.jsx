@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback, useRef, useTransition, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getApodByDate } from '../utils/nasaApi.js';
@@ -10,6 +10,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isPending, startTransition] = useTransition();
   
   // Default to today's date
   const getDefaultDate = () => {
@@ -66,7 +67,19 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     }
   };
 
-  const dateChangeTimeoutRef = useRef(null);
+  // Pre-memoize today's date to avoid recalculation
+  const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
+  
+  // Memoize formatted date for display
+  const formattedDate = useMemo(() => {
+    if (!apodData) return '';
+    return new Date(apodData.date).toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+  }, [apodData?.date]);
 
   // Helper function to add/subtract days from YYYY-MM-DD string
   const addDaysToDateString = useCallback((dateStr, days) => {
@@ -81,10 +94,11 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const goToPreviousDay = useCallback(() => {
     const newDateStr = addDaysToDateString(selectedDate, -1);
     
-    // Enforce minimum date of June 16, 1995 using string comparison
     if (newDateStr >= '1995-06-16') {
-      setSelectedDate(newDateStr);
-      setError(null);
+      startTransition(() => {
+        setSelectedDate(newDateStr);
+        setError(null);
+      });
     } else {
       setError('APOD photos started on June 16, 1995. Please select a date from June 16, 1995 onwards.');
     }
@@ -92,73 +106,67 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
   const goToNextDay = useCallback(() => {
     const newDateStr = addDaysToDateString(selectedDate, 1);
-    const todayStr = new Date().toISOString().split('T')[0];
     
-    // Use string comparison to check if date is today or earlier
     if (newDateStr <= todayStr) {
-      setSelectedDate(newDateStr);
-      setError(null);
+      startTransition(() => {
+        setSelectedDate(newDateStr);
+        setError(null);
+      });
     } else {
       setError('Cannot select future dates. Please select today or an earlier date.');
     }
-  }, [selectedDate, addDaysToDateString]);
+  }, [selectedDate, addDaysToDateString, todayStr]);
 
   const goToToday = useCallback(() => {
-    setSelectedDate(new Date().toISOString().split('T')[0]);
-  }, []);
+    startTransition(() => {
+      setSelectedDate(todayStr);
+    });
+  }, [todayStr]);
 
   const handleDateChange = useCallback((e) => {
     const newDate = e.target.value;
-    
-    // Validate date range using simple string comparison
     const minDateStr = '1995-06-16';
-    const maxDateStr = new Date().toISOString().split('T')[0];
     
     if (newDate < minDateStr) {
       setError('APOD photos started on June 16, 1995. Please select a date from June 16, 1995 onwards.');
       return;
     }
     
-    if (newDate > maxDateStr) {
+    if (newDate > todayStr) {
       setError('Cannot select future dates. Please select today or an earlier date.');
       return;
     }
     
-    setError(null);
-    setSelectedDate(newDate);
-  }, []);
-
-  useEffect(() => {
-    return () => {
-      if (dateChangeTimeoutRef.current) {
-        clearTimeout(dateChangeTimeoutRef.current);
-      }
-    };
-  }, []);
+    startTransition(() => {
+      setError(null);
+      setSelectedDate(newDate);
+    });
+  }, [todayStr]);
 
   const itemIsFavorited = apodData ? isFavorited(apodData) : false;
   const downloadImageUrl = apodData?.hdurl || apodData?.url || '';
 
-  const handleFavoriteToggle = () => {
+  const handleFavoriteToggle = useCallback(() => {
     if (!apodData) {
       return;
     }
 
-    if (itemIsFavorited) {
-      removeFromFavorites(`${apodData.date}-${apodData.title}`);
-      return;
-    }
+    startTransition(() => {
+      if (itemIsFavorited) {
+        removeFromFavorites(`${apodData.date}-${apodData.title}`);
+      } else {
+        addToFavorites(apodData);
+      }
+    });
+  }, [apodData, itemIsFavorited, addToFavorites, removeFromFavorites]);
 
-    addToFavorites(apodData);
-  };
-
-  const closeFullImage = () => {
+  const closeFullImage = useCallback(() => {
     setIsFullImageOpen(false);
-  };
+  }, []);
 
-  const isMobileDevice = () => {
+  const isMobileDevice = useCallback(() => {
     return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-  };
+  }, []);
 
   const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
     try {
@@ -242,7 +250,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                 onChange={handleDateChange}
                 className="date-picker"
                 min="1995-06-16"
-                max={new Date().toISOString().split('T')[0]}
+                max={todayStr}
               />
               <span className="date-label">Select Date</span>
             </div>
@@ -302,12 +310,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
                   <div className="apod-meta">
                     <span className="meta-item">
-                      📅 {new Date(apodData.date).toLocaleDateString('en-US', {
-                        weekday: 'long',
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
+                      📅 {formattedDate}
                     </span>
                     <span className="meta-item">
                       {apodData.media_type === 'image' ? '🖼️ Image' : '🎬 Video'}

@@ -39,6 +39,26 @@ export default async function handler(req, res) {
     if (extensionFromType === 'jpeg') {
       extensionFromType = 'jpg';
     }
+    
+    // Map extensions to proper MIME types for mobile compatibility
+    const mimeTypeMap = {
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg',
+      'png': 'image/png',
+      'gif': 'image/gif',
+      'webp': 'image/webp',
+      'svg': 'image/svg+xml'
+    };
+    
+    // Ensure proper MIME type based on extension
+    let finalMimeType = mimeTypeMap[extensionFromType] || contentType;
+    
+    // For images without proper type, default to JPEG
+    if (!finalMimeType.startsWith('image/')) {
+      finalMimeType = 'image/jpeg';
+      extensionFromType = 'jpg';
+    }
+    
     const safeTitle = String(title)
       .replace(/[^a-zA-Z0-9-_ ]/g, '')
       .trim()
@@ -48,9 +68,12 @@ export default async function handler(req, res) {
     const arrayBuffer = await upstream.arrayBuffer();
     const fileBytes = new Uint8Array(arrayBuffer);
 
-    res.setHeader('Content-Type', contentType);
-    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
+    res.setHeader('Content-Type', finalMimeType);
+    res.setHeader('Content-Disposition', `attachment; filename="${fileName}"; filename*=UTF-8''${encodeURIComponent(fileName)}`);
+    res.setHeader('Content-Length', fileBytes.length);
     res.setHeader('Cache-Control', 'no-store');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
     res.status(200).send(fileBytes);
   } catch (error) {
     res.status(500).json({ error: 'Failed to download image', details: String(error) });
