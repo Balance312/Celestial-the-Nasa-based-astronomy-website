@@ -36,6 +36,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [error, setError] = useState(null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
+  const [downloadingId, setDownloadingId] = useState(null);
+  const [downloadError, setDownloadError] = useState(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -90,6 +92,9 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       return;
     }
 
+    setDownloadingId(item.date);
+    setDownloadError(null);
+
     const downloadUrl = item.hdurl || item.url;
     const params = new URLSearchParams({
       url: downloadUrl,
@@ -124,7 +129,10 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error('Download failed:', error);
-      alert('Download failed. Please try again or check your connection.');
+      setDownloadError('Download failed. Please check your connection and try again.');
+      setTimeout(() => setDownloadError(null), 4000);
+    } finally {
+      setDownloadingId(null);
     }
   }, []);
 
@@ -153,6 +161,13 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
           <div className="error-alert">
             <div className="error-title">⚠️ Error</div>
             <p>{error}</p>
+          </div>
+        )}
+
+        {downloadError && (
+          <div className="error-alert" style={{ marginBottom: '1rem' }}>
+            <div className="error-title">⚠️ Download Error</div>
+            <p>{downloadError}</p>
           </div>
         )}
 
@@ -216,11 +231,11 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                         <button
                           className="btn btn-gallery-action btn-download btn-sm"
                           onClick={(event) => handleDownload(event, item)}
-                          disabled={item.media_type !== 'image'}
+                          disabled={item.media_type !== 'image' || downloadingId === item.date}
                           title={item.media_type === 'image' ? 'Download image' : 'Download is only available for images'}
                         >
-                          <i className="bi bi-download"></i>
-                          Download
+                          <i className={`bi ${downloadingId === item.date ? 'bi-hourglass-split' : 'bi-download'}`}></i>
+                          {downloadingId === item.date ? 'Downloading...' : 'Download'}
                         </button>
                       </div>
                       <div className="gallery-item-actions">

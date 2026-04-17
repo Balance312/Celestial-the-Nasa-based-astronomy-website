@@ -6,6 +6,7 @@ import './pages.css';
 function Profile({ favorites, removeFromFavorites }) {
   const navigate = useNavigate();
   const [downloadingId, setDownloadingId] = useState(null);
+  const [downloadError, setDownloadError] = useState(null);
   const [cacheCleared, setCacheCleared] = useState(false);
 
   const handleClearCache = useCallback(() => {
@@ -20,6 +21,7 @@ function Profile({ favorites, removeFromFavorites }) {
     }
 
     setDownloadingId(item.id);
+    setDownloadError(null);
 
     const downloadUrl = item.hdurl || item.url;
     const params = new URLSearchParams({
@@ -55,6 +57,8 @@ function Profile({ favorites, removeFromFavorites }) {
       URL.revokeObjectURL(objectUrl);
     } catch (error) {
       console.error('Download failed:', error);
+      setDownloadError('Download failed. Please check your connection and try again.');
+      setTimeout(() => setDownloadError(null), 4000);
     } finally {
       setDownloadingId(null);
     }
@@ -72,6 +76,12 @@ function Profile({ favorites, removeFromFavorites }) {
       </div>
 
       <div className="container py-5">
+        {downloadError && (
+          <div className="error-alert mb-4">
+            <div className="error-title">⚠️ Download Error</div>
+            <p>{downloadError}</p>
+          </div>
+        )}
         <div className="collection-summary mb-4">
           <div className="summary-chip">
             <i className="bi bi-stars"></i>
