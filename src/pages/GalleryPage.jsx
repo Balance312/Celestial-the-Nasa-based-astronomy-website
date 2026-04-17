@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo, useRef, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
@@ -10,25 +10,6 @@ const sanitizeFilename = (value) =>
     .replace(/\s+/g, '-')
     .toLowerCase();
 
-const convertVideoUrl = (url) => {
-  if (!url) return '';
-  
-  // YouTube watch URL to embed URL
-  const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-  if (youtubeMatch) {
-    return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1`;
-  }
-  
-  // Vimeo URL to embed URL
-  const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-  if (vimeoMatch) {
-    return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
-  }
-  
-  // Already an embed URL, return as-is
-  return url;
-};
-
 function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
   const [gallery, setGallery] = useState([]);
@@ -38,6 +19,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState(null);
+  const [isPending, startTransition] = useTransition();
+  const closeModalRef = useRef(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -83,6 +66,37 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         setLoading(false);
       }
     }
+  }, []);
+
+  const convertedVideoUrl = useMemo(() => {
+    if (!selectedImage?.url) return '';
+    const url = selectedImage.url;
+    
+    // YouTube watch URL to embed URL
+    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
+    if (youtubeMatch) {
+      return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1`;
+    }
+    
+    // Vimeo URL to embed URL
+    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
+    if (vimeoMatch) {
+      return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
+    }
+    
+    return url;
+  }, [selectedImage?.url]);
+
+  const handleGalleryItemClick = useCallback((item) => {
+    startTransition(() => {
+      setSelectedImage(item);
+      setIsFullscreenMediaOnly(false);
+    });
+  }, []);
+
+  const handleCloseModal = useCallback(() => {
+    setSelectedImage(null);
+    setIsFullscreenMediaOnly(false);
   }, []);
 
   const handleDownload = useCallback(async (event, item) => {
@@ -191,10 +205,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                   <div
                     key={itemId}
                     className="gallery-item"
-                    onClick={() => {
-                      setSelectedImage(item);
-                      setIsFullscreenMediaOnly(false);
-                    }}
+                    onClick={() => handleGalleryItemClick(item)}
                   >
                     <div className="gallery-thumbnail">
                       {item.media_type === 'image' ? (
@@ -265,10 +276,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
               <>
                 <div
                   className="modal-overlay"
-                  onClick={() => {
-                    setSelectedImage(null);
-                    setIsFullscreenMediaOnly(false);
-                  }}
+                  onClick={handleCloseModal}
                 >
                   <div
                     className={`modal-content ${isFullscreenMediaOnly ? 'apod-fullscreen-content' : ''}`}
@@ -284,10 +292,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                   >
                   <button
                     className="modal-close"
-                    onClick={() => {
-                      setSelectedImage(null);
-                      setIsFullscreenMediaOnly(false);
-                    }}
+                    onClick={handleCloseModal}
                   >
                     ✕
                   </button>
@@ -303,7 +308,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                     ) : (
                       <div className="video-container">
                         <iframe
-                          src={convertVideoUrl(selectedImage.url)}
+                          src={convertedVideoUrl}
                           className="modal-iframe"
                           title={selectedImage.title}
                           allowFullScreen
