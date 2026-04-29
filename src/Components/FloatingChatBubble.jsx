@@ -10,7 +10,6 @@ export default function FloatingChatBubble() {
   const location = useLocation();
   const [isOpen, setIsOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-  const notificationTimeoutRef = useRef(null);
   const [messages, setMessages] = useState(() => {
     const stored = localStorage.getItem(BUBBLE_CHAT_STORAGE_KEY);
     if (stored) {
@@ -34,15 +33,6 @@ export default function FloatingChatBubble() {
 
   // Check if on chat page  
   const isOnChatPage = location.pathname === "/chat";
-
-  // Clean up timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (notificationTimeoutRef.current) {
-        clearTimeout(notificationTimeoutRef.current);
-      }
-    };
-  }, []);
 
   // Persist messages to localStorage
   useEffect(() => {

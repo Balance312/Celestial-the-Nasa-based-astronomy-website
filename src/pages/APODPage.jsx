@@ -13,7 +13,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   
   // Default to today's date
   const getDefaultDate = () => {
@@ -63,6 +63,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
   useEffect(() => {
     const controller = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAPOD(selectedDate, controller.signal);
 
     return () => {

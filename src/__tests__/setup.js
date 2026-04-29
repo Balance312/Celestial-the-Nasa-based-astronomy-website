@@ -1,5 +1,5 @@
 import '@testing-library/jest-dom';
-import { expect, afterEach, vi, beforeEach } from 'vitest';
+import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/react';
 
 // Mock localStorage
@@ -34,4 +34,4 @@ afterEach(() => {
 process.env.VITE_NASA_API_KEY = 'test-api-key';
 
 // Mock fetch globally if needed
-global.fetch = vi.fn();
+globalThis.fetch = vi.fn();

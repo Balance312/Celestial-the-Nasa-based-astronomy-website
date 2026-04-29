@@ -1,14 +1,14 @@
-import { useEffect, useState, useCallback, useMemo, useRef, useTransition } from 'react';
+import { useEffect, useState, useCallback, useMemo, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
-import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
+import { sanitizeFilename } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
 import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT } from '../constants/apod.js';
 
 function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -16,16 +16,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [isFullscreenMediaOnly, setIsFullscreenMediaOnly] = useState(false);
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState(null);
-  const closeModalRef = useRef(null);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchRandomGallery({ signal: controller.signal, preferCache: true });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   const fetchRandomGallery = useCallback(async ({ signal, preferCache = true } = {}) => {
     try {
@@ -59,6 +49,16 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       }
     }
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRandomGallery({ signal: controller.signal, preferCache: true });
+
+    return () => {
+      controller.abort();
+    };
+  }, [fetchRandomGallery]);
 
   const convertedVideoUrl = useMemo(() => {
     if (!selectedImage?.url) return '';

@@ -11,16 +11,7 @@ function EpicPage() {
     return new Date().toISOString().split('T')[0];
   };
   const [selectedDate, setSelectedDate] = useState(getDefaultDate());
-  const [isPending, startTransition] = useTransition();
-
-  useEffect(() => {
-    const controller = new AbortController();
-    fetchEpicData(selectedDate, controller.signal);
-
-    return () => {
-      controller.abort();
-    };
-  }, [selectedDate]);
+  const [, startTransition] = useTransition();
 
   const fetchEpicData = useCallback(async (date, signal) => {
     try {
@@ -148,9 +139,15 @@ function EpicPage() {
     });
   }, []);
 
-  const closeModal = useCallback(() => {
-    setSelectedImage(null);
-  }, []);
+  useEffect(() => {
+    const controller = new AbortController();
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchEpicData(selectedDate, controller.signal);
+
+    return () => {
+      controller.abort();
+    };
+  }, [selectedDate, fetchEpicData]);
 
   // Pre-memoize today's date
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -215,7 +212,7 @@ function EpicPage() {
       month: 'long',
       day: 'numeric',
     });
-  }, [selectedImage?.date]);
+  }, [selectedImage]);
 
   return (
     <div className="epic-page">

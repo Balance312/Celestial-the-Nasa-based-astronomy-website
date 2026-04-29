@@ -14,9 +14,11 @@ function MediaView({
   const { date } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const [media, setMedia] = useState(null);
-  const [relatedImages, setRelatedImages] = useState([]);
-  const [loading, setLoading] = useState(true);
+  
+  // Initialize state from location.state if available
+  const [media, setMedia] = useState(() => location.state?.image || null);
+  const [relatedImages] = useState(() => location.state?.relatedImages || []);
+  const [loading, setLoading] = useState(() => !location.state?.image && !!date);
   const [error, setError] = useState(null);
 
   // Fetch media data - declared before useEffect
@@ -51,26 +53,26 @@ function MediaView({
     }
   }, [date]);
 
+  // Effect for API fetch when date changes
   useEffect(() => {
-    const controller = new AbortController();
-    
-    // Check if data is passed via navigation state (from image library or gallery)
     if (location.state?.image) {
-      setMedia(location.state.image);
-      setRelatedImages(location.state.relatedImages || []);
-      setLoading(false);
-    } else if (date) {
-      // Fetch from API if date parameter is provided (APOD)
-      fetchMediaData({ signal: controller.signal });
-    } else {
+      return;
+    }
+
+    if (!date) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setError('No media data provided');
       setLoading(false);
+      return;
     }
+
+    const controller = new AbortController();
+    fetchMediaData({ signal: controller.signal });
 
     return () => {
       controller.abort();
     };
-  }, [date, location.state, fetchMediaData]);
+  }, [date, fetchMediaData, location.state]);
 
   const handleDownload = useCallback(async () => {
     if (!media || media.media_type !== 'image') {

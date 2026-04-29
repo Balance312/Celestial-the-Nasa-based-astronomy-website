@@ -6,7 +6,7 @@ function AboutPage() {
       <div className="page-hero about-hero">
         <div className="hero-content">
           <h1 className="page-title">About Celestial</h1>
-          <p className="page-subtitle">Exploring the infinite cosmos</p>
+          <p className="page-subtitle">Your gateway to the infinite cosmos – where wonder meets discovery</p>
         </div>
       </div>
 
@@ -17,12 +17,13 @@ function AboutPage() {
             <div className="col-lg-6 mb-4">
               <h2 className="section-title">Our Mission</h2>
               <p className="section-text">
-                Celestial is dedicated to bringing the wonders of the universe to everyone. Our mission is to
-                make space exploration and astronomical knowledge accessible, inspiring, and engaging for all.
+                We're obsessed with one thing: bringing the mind-bending beauty of the universe right to your screen.
+                Celestial transforms how you experience space – from breathtaking cosmic phenomena to mind-expanding
+                astronomical knowledge that reminds you how small (yet significant) we really are.
               </p>
               <p className="section-text">
-                Through our collection of NASA's Astronomy Picture of the Day and other cosmic resources,
-                we aim to spark curiosity about our place in the universe.
+                Powered by NASA's legendary Astronomy Picture of the Day archive, we make cutting-edge space exploration
+                feel personal, intimate, and absolutely awe-inspiring. Every day brings a new cosmic story waiting to be discovered.
               </p>
             </div>
             <div className="col-lg-6">
@@ -40,27 +41,27 @@ function AboutPage() {
             <div className="col-md-4">
               <div className="about-card">
                 <div className="card-icon">🔭</div>
-                <h3>Daily APOD</h3>
+                <h3>Daily Cosmic Treasures</h3>
                 <p>
-                  Discover a new astronomical image or video every single day from NASA's curated collection.
+                  A fresh astronomical masterpiece lands on your screen every single day. Galaxies, nebulae, and cosmic events that'll make your jaw drop.
                 </p>
               </div>
             </div>
             <div className="col-md-4">
               <div className="about-card">
                 <div className="card-icon">🌠</div>
-                <h3>Cosmic Gallery</h3>
+                <h3>Stunning Gallery</h3>
                 <p>
-                  Browse through a stunning collection of the universe's most spectacular moments and phenomena.
+                  Journey through 7000+ images of the universe's most jaw-dropping moments. From star birth to black holes – it's all here.
                 </p>
               </div>
             </div>
             <div className="col-md-4">
               <div className="about-card">
                 <div className="card-icon">🚀</div>
-                <h3>Space Knowledge</h3>
+                <h3>Expand Your Mind</h3>
                 <p>
-                  Learn fascinating facts about space, astronomy, and the incredible cosmos we live in.
+                  Expert insights on every image. Learn what you're looking at, why it matters, and what it tells us about reality itself.
                 </p>
               </div>
             </div>
@@ -71,16 +72,16 @@ function AboutPage() {
         <section className="about-section mb-5">
           <div className="row align-items-center">
             <div className="col-lg-6 order-lg-2 mb-4">
-              <h2 className="section-title">Built with Modern Tech</h2>
+              <h2 className="section-title">Cutting-Edge Tech</h2>
               <p className="section-text">
-                Celestial is built using the latest web technologies to provide you with a fast, responsive,
-                and beautiful experience.
+                We built Celestial on a foundation of modern, blazing-fast technology to deliver the silkiest experience.
+                Your cosmic journey deserves a platform that keeps up with your curiosity.
               </p>
               <div className="tech-list">
-                <div className="tech-item">⚛️ React - Modern UI library</div>
-                <div className="tech-item">⚡ Vite - Lightning-fast build tool</div>
-                <div className="tech-item">🎨 Bootstrap - Responsive design</div>
-                <div className="tech-item">🚀 NASA API - Real space data</div>
+                <div className="tech-item">⚛️ React – Responsive, interactive experiences</div>
+                <div className="tech-item">⚡ Vite – Lightning-speed performance</div>
+                <div className="tech-item">🎨 Bootstrap – Beautiful, adaptive design</div>
+                <div className="tech-item">🚀 NASA API – Real-time cosmic data</div>
               </div>
             </div>
             <div className="col-lg-6 order-lg-1">
@@ -97,13 +98,13 @@ function AboutPage() {
           <div className="row g-4">
             <div className="col-md-3 col-sm-6">
               <div className="stat-box">
-                <div className="stat-number">20+</div>
-                <div className="stat-label">Years of APOD</div>
+                <div className="stat-number">29+</div>
+                <div className="stat-label">Years Running</div>
               </div>
             </div>
             <div className="col-md-3 col-sm-6">
               <div className="stat-box">
-                <div className="stat-number">7000+</div>
+                <div className="stat-number">10K+</div>
                 <div className="stat-label">Images & Videos</div>
               </div>
             </div>
@@ -116,7 +117,7 @@ function AboutPage() {
             <div className="col-md-3 col-sm-6">
               <div className="stat-box">
                 <div className="stat-number">🌍</div>
-                <div className="stat-label">For Everyone</div>
+                <div className="stat-label">Totally Free</div>
               </div>
             </div>
           </div>
@@ -126,22 +127,21 @@ function AboutPage() {
         <section className="about-section py-5 nasa-info">
           <div className="row">
             <div className="col-lg-8 offset-lg-2">
-              <h2 className="section-title text-center mb-4">About Our Data Source</h2>
+              <h2 className="section-title text-center mb-4">Powered by NASA</h2>
               <div className="info-box">
-                <h4>NASA's Astronomy Picture of the Day (APOD)</h4>
+                <h4>The Legendary APOD Archive</h4>
                 <p>
-                  APOD is a website provided by NASA's Goddard Space Flight Center and Michigan Technological University.
-                  Each day, a different image or photograph of our fascinating universe is featured, along with a brief
-                  explanation written by a professional astronomer.
+                  Since 1995, NASA's Astronomy Picture of the Day (APOD) has been humanity's daily dose of cosmic wonder.
+                  Curated by professional astronomers from NASA's Goddard Space Flight Center and Michigan Tech, each image
+                  comes with expert explanations that transform you from observer to astronomer.
                 </p>
                 <p>
-                  The images cover a wide range of astronomical phenomena including galaxies, nebulae, planets, stars,
-                  and more. APOD has been running since 1995 and provides an incredible archive of space photography
-                  and space science information.
+                  We tap into this incredible vault of 10,000+ images and videos – from distant galaxies and nebulae to
+                  planetary close-ups and stellar phenomena. It's basically having the universe's greatest hits delivered to you daily.
                 </p>
                 <p className="text-center mt-4">
                   <a href="https://apod.nasa.gov/" target="_blank" rel="noopener noreferrer" className="btn btn-outline-light">
-                    Visit NASA APOD →
+                    Explore the Original APOD →
                   </a>
                 </p>
               </div>
