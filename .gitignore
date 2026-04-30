@@ -32,6 +32,8 @@ dist-ssr
 # ADD ALL THE MD FILES TO THE GITIGNORE FILE, EXCEPT THE README.MD FILE
 *.md
 !README.md
+# add api file to gitignore
+api/
 
 
 
