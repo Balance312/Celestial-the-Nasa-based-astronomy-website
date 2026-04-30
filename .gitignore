@@ -28,4 +28,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-.claude*
+.claude/
+
+# ADD ALL THE MD FILES TO THE GITIGNORE FILE, EXCEPT THE README.MD FILE
+*.md
+!README.md
+
+
+
