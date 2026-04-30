@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import Router from "./Router.jsx";
 import { clearApiCache } from "./utils/nasaApi.js";
 import { CACHE_KEYS } from "./constants/apod.js";
@@ -95,12 +96,15 @@ function App() {
   const isFavorited = useCallback((item) => favorites.some((favorite) => favorite.id === createItemId(item)), [favorites]);
 
   return (
-    <Router
-      favorites={favoritesByNewest}
-      addToFavorites={addToFavorites}
-      removeFromFavorites={removeFromFavorites}
-      isFavorited={isFavorited}
-    />
+    <>
+      <SpeedInsights />
+      <Router
+        favorites={favoritesByNewest}
+        addToFavorites={addToFavorites}
+        removeFromFavorites={removeFromFavorites}
+        isFavorited={isFavorited}
+      />
+    </>
   );
 }
 
