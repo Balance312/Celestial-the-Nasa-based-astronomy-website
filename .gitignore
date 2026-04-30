@@ -29,7 +29,6 @@ dist-ssr
 *.sln
 *.sw?
 .claude/
-
 # ADD ALL THE MD FILES TO THE GITIGNORE FILE, EXCEPT THE README.MD FILE
 *.md
 !README.md
