@@ -1,5 +1,5 @@
 # NASA Astronomy Picture of the Day (APOD) Dashboard
-# YOU CAN VISIT THE WEBSITE AT [https://github.com/Balance312/Home-page-Hult](https://celestial-the-nasa-based-astronomy.vercel.app/)
+# YOU CAN VISIT THE WEBSITE AT https://celestial-the-nasa-based-astronomy.vercel.app/
 
 A modern, responsive web application that displays NASA's Astronomy Picture of the Day using React, Vite, and Bootstrap with a beautiful deep space purple theme.
 
