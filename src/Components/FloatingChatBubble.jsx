@@ -29,6 +29,7 @@ export default function FloatingChatBubble() {
   });
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
   const messagesEndRef = useRef(null);
 
   // Check if on chat page  
@@ -64,6 +65,7 @@ export default function FloatingChatBubble() {
 
     if (!inputValue.trim()) return;
 
+    setError("");
     const userMessage = inputValue;
     setInputValue("");
 
@@ -92,6 +94,7 @@ export default function FloatingChatBubble() {
 
       setMessages((prev) => [...prev, aiMsgObj]);
     } catch (err) {
+      setError(err.message || "Failed to get response. Please try again.");
       console.error("Error:", err);
     } finally {
       setLoading(false);
@@ -114,6 +117,7 @@ export default function FloatingChatBubble() {
     ];
     setMessages(initialMessages);
     localStorage.setItem(BUBBLE_CHAT_STORAGE_KEY, JSON.stringify(initialMessages));
+    setError("");
   };
 
   return createPortal(
@@ -178,6 +182,12 @@ export default function FloatingChatBubble() {
                   <span></span>
                   <span></span>
                 </div>
+              </div>
+            )}
+
+            {error && (
+              <div className="error-message">
+                <span>⚠ {error}</span>
               </div>
             )}
 

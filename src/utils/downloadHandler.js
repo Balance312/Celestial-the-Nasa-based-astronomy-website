@@ -31,32 +31,19 @@ export async function downloadFile(downloadUrl, filename, itemTitle, itemDate) {
       date: itemDate,
     });
 
-    const response = await fetch(`/api/download?${params.toString()}`);
-    if (!response.ok) {
-      throw new Error(`Download failed: ${response.status}`);
-    }
+    const finalUrl = `/api/download?${params.toString()}`;
+    
+    // Native window location change triggers browser native download securely on all devices and platforms
+    window.location.href = finalUrl;
 
-    const blob = await response.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = objectUrl;
-    link.download = filename.replace(/\.jpeg$/i, '.jpg');
-    link.style.display = 'none';
-    document.body.appendChild(link);
-
-    // Trigger click and ensure it completes before cleanup
-    link.click();
-
-    // Delay cleanup to allow download to start
-    setTimeout(() => {
-      document.body.removeChild(link);
-      URL.revokeObjectURL(objectUrl);
-    }, 100);
+    // Artificial delay to maintain a smooth loading/downloading state in the UI
+    await new Promise((resolve) => setTimeout(resolve, 1500));
   } catch (error) {
     console.error('Download failed:', error);
     throw error;
   }
 }
+
 
 /**
  * Fallback download by opening in new tab

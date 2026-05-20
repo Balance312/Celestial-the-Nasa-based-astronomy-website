@@ -1,7 +1,9 @@
 import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { clearApiCache } from '../utils/nasaApi.js';
+import { sanitizeFilename, downloadFile } from '../utils/downloadHandler.js';
 import './pages.css';
+
 
 function Profile({ favorites, removeFromFavorites }) {
   const navigate = useNavigate();
@@ -17,41 +19,6 @@ function Profile({ favorites, removeFromFavorites }) {
 
 
 
-  const downloadFile = async (downloadUrl, filename, itemTitle, itemDate) => {
-    try {
-      const params = new URLSearchParams({
-        url: downloadUrl,
-        title: itemTitle,
-        date: itemDate,
-      });
-
-      // Use blob download for all devices (more reliable)
-      const response = await fetch(`/api/download?${params.toString()}`);
-      if (!response.ok) throw new Error(`Download failed: ${response.status}`);
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
-      anchor.style.display = 'none';
-      document.body.appendChild(anchor);
-      
-      // Trigger click and ensure it completes before cleanup
-      anchor.click();
-      
-      // Delay cleanup to allow download to start
-      setTimeout(() => {
-        document.body.removeChild(anchor);
-        URL.revokeObjectURL(objectUrl);
-      }, 100);
-    } catch (error) {
-      console.error('Download failed:', error);
-      // Fallback: open in new tab
-      window.open(downloadUrl, '_blank');
-    }
-  };
-
   const handleDownload = useCallback(async (item) => {
     if (item.media_type !== 'image') {
       return;
@@ -62,7 +29,9 @@ function Profile({ favorites, removeFromFavorites }) {
 
     try {
       const downloadUrl = item.hdurl || item.url;
-      const filename = `${item.title.replace(/[^a-zA-Z0-9-_ ]/g, '').trim().replace(/\s+/g, '_')}.jpg`;
+      const extension = downloadUrl.split('.').pop()?.split('?')[0] || 'jpg';
+      const filename = `${sanitizeFilename(item.title)}.${extension}`;
+      
       await downloadFile(downloadUrl, filename, item.title, item.date);
     } catch (error) {
       console.error('Download failed:', error);
@@ -72,6 +41,7 @@ function Profile({ favorites, removeFromFavorites }) {
       setDownloadingId(null);
     }
   }, []);
+
 
   return (
     <div className="profile-page">

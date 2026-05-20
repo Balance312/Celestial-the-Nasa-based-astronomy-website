@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback, useMemo, useTransition } from 'react'
 import { useNavigate } from 'react-router-dom';
 import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
-import { sanitizeFilename } from '../utils/downloadHandler.js';
+import { sanitizeFilename, downloadFile } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
 import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT } from '../constants/apod.js';
 
@@ -101,46 +101,12 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setDownloadingId(item.date);
     setDownloadError(null);
 
-    const downloadUrl = item.hdurl || item.url;
-    const params = new URLSearchParams({
-      url: downloadUrl,
-      title: item.title,
-      date: item.date,
-    });
-
     try {
-      // Use blob download for all devices (more reliable)
-      const response = await fetch(`/api/download?${params.toString()}`);
-
-      if (!response.ok) {
-        throw new Error(`Download failed: ${response.status}`);
-      }
-
-      const contentDisposition = response.headers.get('content-disposition') || '';
-      let filename = `${sanitizeFilename(item.title)}.jpg`;
+      const downloadUrl = item.hdurl || item.url;
+      const extension = downloadUrl.split('.').pop()?.split('?')[0] || 'jpg';
+      const filename = `${sanitizeFilename(item.title)}.${extension}`;
       
-      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-      if (filenameMatch) {
-        filename = filenameMatch[1];
-      }
-
-      const blob = await response.blob();
-      const objectUrl = URL.createObjectURL(blob);
-
-      const anchor = document.createElement('a');
-      anchor.href = objectUrl;
-      anchor.download = filename.replace(/\.jpeg$/i, '.jpg');
-      anchor.style.display = 'none';
-      document.body.appendChild(anchor);
-      
-      // Trigger click and ensure it completes before cleanup
-      anchor.click();
-      
-      // Delay cleanup to allow download to start
-      setTimeout(() => {
-        document.body.removeChild(anchor);
-        URL.revokeObjectURL(objectUrl);
-      }, 100);
+      await downloadFile(downloadUrl, filename, item.title, item.date);
     } catch (error) {
       console.error('Download failed:', error);
       setDownloadError('Download failed. Please check your connection and try again.');
@@ -149,6 +115,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       setDownloadingId(null);
     }
   }, []);
+
 
   return (
     <div className="gallery-page">

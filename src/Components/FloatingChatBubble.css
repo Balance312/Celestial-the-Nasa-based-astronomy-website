@@ -185,3 +185,14 @@
     background: rgba(103, 212, 194, 0.25);
     color: var(--text-primary);
 }
+
+.error-message {
+    background: rgba(255, 107, 107, 0.12);
+    border: 1px solid rgba(255, 107, 107, 0.4);
+    border-radius: var(--radius-md, 8px);
+    padding: 0.6rem 0.8rem;
+    color: #ffd7cf;
+    text-align: center;
+    font-size: 0.8rem;
+    margin-top: 0.4rem;
+}
