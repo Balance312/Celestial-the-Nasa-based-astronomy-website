@@ -24,24 +24,35 @@ export const sanitizeFilename = (value) =>
  * @throws {Error} If download fails
  */
 export async function downloadFile(downloadUrl, filename, itemTitle, itemDate) {
-  try {
-    const params = new URLSearchParams({
-      url: downloadUrl,
-      title: itemTitle,
-      date: itemDate,
-    });
+  const params = new URLSearchParams({
+    url: downloadUrl,
+    title: itemTitle,
+    date: itemDate,
+  });
 
-    const finalUrl = `/api/download?${params.toString()}`;
-    
-    // Native window location change triggers browser native download securely on all devices and platforms
-    window.location.href = finalUrl;
+  const proxyUrl = `/api/download?${params.toString()}`;
 
-    // Artificial delay to maintain a smooth loading/downloading state in the UI
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-  } catch (error) {
-    console.error('Download failed:', error);
-    throw error;
+  // Fetch as blob and trigger download via <a download> — works on iOS Safari
+  const response = await fetch(proxyUrl);
+  if (!response.ok) {
+    throw new Error(`Download failed: ${response.status}`);
   }
+
+  const blob = await response.blob();
+  const blobUrl = URL.createObjectURL(blob);
+
+  const link = document.createElement('a');
+  link.href = blobUrl;
+  link.download = filename;
+  link.style.display = 'none';
+  document.body.appendChild(link);
+  link.click();
+
+  // Cleanup
+  setTimeout(() => {
+    URL.revokeObjectURL(blobUrl);
+    document.body.removeChild(link);
+  }, 100);
 }
 
 
