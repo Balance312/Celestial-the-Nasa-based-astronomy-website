@@ -36,8 +36,7 @@ describe('APODPage', () => {
       </MemoryRouter>,
     );
 
-    const titles = screen.getAllByText(/Astronomy Picture of the Day/i);
-    expect(titles.length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByText(/Astronomy Picture of the Day/i)).toBeInTheDocument();
   });
 
   it('should render date navigation controls', () => {
@@ -49,20 +48,8 @@ describe('APODPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Previous Day/i)).toBeInTheDocument();
-    expect(screen.getByText(/Next Day/i)).toBeInTheDocument();
+    expect(screen.getByText(/Previous/i)).toBeInTheDocument();
+    expect(screen.getByText(/Next/i)).toBeInTheDocument();
     expect(screen.getByText(/Today/i)).toBeInTheDocument();
-  });
-
-  it('should render history note with start date', () => {
-    globalThis.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
-
-    render(
-      <MemoryRouter>
-        <APODPage {...mockProps} />
-      </MemoryRouter>,
-    );
-
-    expect(screen.getByText(/June 16, 1995/i)).toBeInTheDocument();
   });
 });

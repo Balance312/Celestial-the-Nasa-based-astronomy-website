@@ -18,10 +18,13 @@ export default function Footer() {
                 <Link to="/">Home</Link>
               </li>
               <li>
-                <Link to="/apod">Today&apos;s APOD</Link>
+                <Link to="/apod">APOD</Link>
               </li>
               <li>
                 <Link to="/gallery">Gallery</Link>
+              </li>
+              <li>
+                <Link to="/epic">EPIC</Link>
               </li>
               <li>
                 <Link to="/about">About</Link>
@@ -61,7 +64,7 @@ export default function Footer() {
             </ul>
           </div>
           <div>
-            <h5 className="footer-title">Give us a star here</h5>
+            <h5 className="footer-title">Open Source</h5>
             <ul className="footer-links">
               <li>
                 <a
@@ -69,14 +72,15 @@ export default function Footer() {
                   target="_blank"
                   rel="noopener noreferrer"
                 >
-                  GitHub repo
+                  <i className="bi bi-github mr-1"></i>
+                  GitHub Repository
                 </a>
               </li>
             </ul>
           </div>
         </div>
-        <div className="border-t border-white/10 py-6 text-center">
-          <p className="text-muted mb-0">
+        <div className="border-t border-border-glow py-6 text-center">
+          <p className="m-0 text-sm text-text-muted">
             &copy; 2026 Celestial. All rights reserved. Powered by NASA APOD
             API.
           </p>

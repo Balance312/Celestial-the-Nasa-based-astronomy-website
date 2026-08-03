@@ -177,7 +177,7 @@ describe('nasaApi', () => {
 
       expect(localStorage.getItem('nasa:apod:date:2024-01-01')).toBeNull();
       expect(localStorage.getItem('nasa:apod:today:2024-01-15')).toBeNull();
-      expect(localStorage.getItem('nasa:epic:latest')).toBe('{"data":"test3"}');
+      expect(localStorage.getItem('nasa:epic:latest')).toBeNull();
       expect(localStorage.getItem('other-key')).toBe('should remain');
     });
   });

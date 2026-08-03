@@ -16,6 +16,7 @@ function MediaView({
   
   // Initialize state from location.state if available
   const [media, setMedia] = useState(() => location.state?.image || null);
+  const [imgError, setImgError] = useState(false);
   const [relatedImages] = useState(() => location.state?.relatedImages || []);
   const [loading, setLoading] = useState(() => !location.state?.image && !!date);
   const [error, setError] = useState(null);
@@ -121,7 +122,6 @@ function MediaView({
   const itemIsFavorited = isFavorited(media);
   const mediaItemId = media.date ? createItemId(media) : media.id;
   
-  // Determine if this is APOD data (has media_type) or image library data (has thumbnail)
   const isApodData = media.media_type !== undefined;
   const isImageLibraryData = media.thumbnail !== undefined;
 
@@ -163,20 +163,21 @@ function MediaView({
             )
           ) : (
             // Image Library Media Display
-            <img
-              src={media.thumbnail}
-              alt={media.title}
-              className="media-image"
-              loading="lazy"
-              decoding="async"
-              onError={(e) => {
-                e.target.style.display = 'none';
-                const fallback = document.createElement('div');
-                fallback.className = 'media-fallback-container';
-                fallback.innerHTML = '<i class="bi bi-image media-fallback-icon"></i><span>Image unavailable</span>';
-                e.target.parentElement.appendChild(fallback);
-              }}
-            />
+              !imgError ? (
+                <img
+                  src={media.thumbnail}
+                  alt={media.title}
+                  className="media-image"
+                  loading="lazy"
+                  decoding="async"
+                  onError={() => setImgError(true)}
+                />
+              ) : (
+                <div className="media-fallback-container">
+                  <i className="bi bi-image media-fallback-icon"></i>
+                  <span>Image unavailable</span>
+                </div>
+              )
           )}
         </div>
 

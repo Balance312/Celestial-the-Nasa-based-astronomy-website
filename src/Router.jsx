@@ -13,14 +13,13 @@ const Profile = lazy(() => import("./pages/Profile.jsx"));
 const MediaView = lazy(() => import("./pages/MediaView.jsx"));
 const EpicPage = lazy(() => import("./pages/EpicPage.jsx"));
 const ChatBot = lazy(() => import("./pages/ChatBot.jsx"));
+const NotFound = lazy(() => import("./pages/NotFound.jsx"));
 
 function Router({
   favorites,
   addToFavorites,
   removeFromFavorites,
   isFavorited,
-  theme,
-  toggleTheme,
 }) {
   return (
     <BrowserRouter>
@@ -28,7 +27,7 @@ function Router({
         Skip to content
       </a>
       <SeoManager />
-      <Navbar favoritesCount={favorites.length} theme={theme} toggleTheme={toggleTheme} />
+      <Navbar favoritesCount={favorites.length} />
       <FloatingChatBubble />
       <main id="main-content">
       <Suspense
@@ -80,6 +79,7 @@ function Router({
             element={<Profile favorites={favorites} removeFromFavorites={removeFromFavorites} />}
           />
           <Route path="/chat" element={<ChatBot />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
         <Footer />
       </Suspense>

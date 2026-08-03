@@ -2,7 +2,6 @@ import { useEffect, useMemo, useRef, useState, useCallback } from "react";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import Router from "./Router.jsx";
 import { CACHE_KEYS, createItemId } from "./constants/apod.js";
-import useTheme from "./hooks/useTheme.js";
 
 const parseStoredValue = (value, fallback) => {
   try {
@@ -22,7 +21,6 @@ const initializeFavorites = () => {
 function App() {
   const [favorites, setFavorites] = useState(initializeFavorites);
   const isFirstPersist = useRef(true);
-  const { theme, toggleTheme } = useTheme();
 
   useEffect(() => {
     if (isFirstPersist.current) {
@@ -90,8 +88,6 @@ function App() {
         addToFavorites={addToFavorites}
         removeFromFavorites={removeFromFavorites}
         isFavorited={isFavorited}
-        theme={theme}
-        toggleTheme={toggleTheme}
       />
     </>
   );

@@ -15,7 +15,7 @@ describe('Navbar', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText('Celestial')).toBeInTheDocument();
+    expect(screen.getByText('CELESTIAL')).toBeInTheDocument();
   });
 
   it('should render all navigation links', () => {
@@ -26,10 +26,10 @@ describe('Navbar', () => {
     );
 
     expect(screen.getByText('Home')).toBeInTheDocument();
-    expect(screen.getByText("Today's APOD")).toBeInTheDocument();
+    expect(screen.getByText('APOD')).toBeInTheDocument();
     expect(screen.getByText('Gallery')).toBeInTheDocument();
-    expect(screen.getByText('Earth EPIC')).toBeInTheDocument();
-    expect(screen.getByText('My Space Collection')).toBeInTheDocument();
+    expect(screen.getByText('EPIC')).toBeInTheDocument();
+    expect(screen.getByText('My Collection')).toBeInTheDocument();
     expect(screen.getByText('About')).toBeInTheDocument();
   });
 

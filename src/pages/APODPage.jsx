@@ -5,23 +5,18 @@ import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
 import { APOD_START_DATE, DATE_MESSAGES, API_ERROR_MESSAGES, getDefaultDate } from '../constants/apod.js';
 
-
-
 function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [, startTransition] = useTransition();
-  
+
   const [selectedDate, setSelectedDate] = useState(getDefaultDate());
-  const [isFullImageOpen, setIsFullImageOpen] = useState(false);
   const [isDownloading, setIsDownloading] = useState(false);
 
-  // Pre-memoize today's date to avoid recalculation
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
 
-  // Fetch APOD data - declared before useEffect
   const fetchAPOD = useCallback(async (date, signal) => {
     try {
       setLoading(true);
@@ -31,9 +26,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       const data = await getApodByDate(apiKey, date, { signal, preferCache: true });
       setApodData(data);
     } catch (err) {
-      if (err.name === 'AbortError') {
-        return;
-      }
+      if (err.name === 'AbortError') return;
 
       let errorMessage = 'Failed to load APOD data';
       if (err.message.includes('503')) {
@@ -45,13 +38,11 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
       } else if (err.message.includes('Failed to fetch')) {
         errorMessage = API_ERROR_MESSAGES.NETWORK;
       }
-      
+
       setError(errorMessage);
       console.error('Error fetching APOD:', err);
     } finally {
-      if (!signal?.aborted) {
-        setLoading(false);
-      }
+      if (!signal?.aborted) setLoading(false);
     }
   }, []);
 
@@ -59,13 +50,9 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     const controller = new AbortController();
     // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchAPOD(selectedDate, controller.signal);
-
-    return () => {
-      controller.abort();
-    };
+    return () => controller.abort();
   }, [selectedDate, fetchAPOD]);
-  
-  // Memoize formatted date for display
+
   const formattedDate = useMemo(() => {
     if (!apodData) return '';
     return new Date(apodData.date).toLocaleDateString('en-US', {
@@ -76,24 +63,19 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     });
   }, [apodData]);
 
-  // Helper function to add/subtract days from YYYY-MM-DD string
   const addDaysToDateString = useCallback((dateStr, days) => {
     const parts = dateStr.split('-');
     const date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
     date.setDate(date.getDate() + days);
-    return date.getFullYear() + '-' + 
-           String(date.getMonth() + 1).padStart(2, '0') + '-' + 
+    return date.getFullYear() + '-' +
+           String(date.getMonth() + 1).padStart(2, '0') + '-' +
            String(date.getDate()).padStart(2, '0');
   }, []);
 
   const goToPreviousDay = useCallback(() => {
     const newDateStr = addDaysToDateString(selectedDate, -1);
-    
     if (newDateStr >= APOD_START_DATE) {
-      startTransition(() => {
-        setSelectedDate(newDateStr);
-        setError(null);
-      });
+      startTransition(() => { setSelectedDate(newDateStr); setError(null); });
     } else {
       setError(DATE_MESSAGES.BEFORE_START);
     }
@@ -101,50 +83,29 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
   const goToNextDay = useCallback(() => {
     const newDateStr = addDaysToDateString(selectedDate, 1);
-    
     if (newDateStr <= todayStr) {
-      startTransition(() => {
-        setSelectedDate(newDateStr);
-        setError(null);
-      });
+      startTransition(() => { setSelectedDate(newDateStr); setError(null); });
     } else {
       setError(DATE_MESSAGES.FUTURE);
     }
   }, [selectedDate, addDaysToDateString, todayStr]);
 
   const goToToday = useCallback(() => {
-    startTransition(() => {
-      setSelectedDate(todayStr);
-    });
+    startTransition(() => setSelectedDate(todayStr));
   }, [todayStr]);
 
   const handleDateChange = useCallback((e) => {
     const newDate = e.target.value;
-    
-    if (newDate < APOD_START_DATE) {
-      setError(DATE_MESSAGES.BEFORE_START);
-      return;
-    }
-    
-    if (newDate > todayStr) {
-      setError(DATE_MESSAGES.FUTURE);
-      return;
-    }
-    
-    startTransition(() => {
-      setError(null);
-      setSelectedDate(newDate);
-    });
+    if (newDate < APOD_START_DATE) { setError(DATE_MESSAGES.BEFORE_START); return; }
+    if (newDate > todayStr) { setError(DATE_MESSAGES.FUTURE); return; }
+    startTransition(() => { setError(null); setSelectedDate(newDate); });
   }, [todayStr]);
 
   const itemIsFavorited = apodData ? isFavorited(apodData) : false;
   const downloadImageUrl = apodData?.hdurl || apodData?.url || '';
 
   const handleFavoriteToggle = useCallback(() => {
-    if (!apodData) {
-      return;
-    }
-
+    if (!apodData) return;
     startTransition(() => {
       if (itemIsFavorited) {
         removeFromFavorites(`${apodData.date}-${apodData.title}`);
@@ -154,18 +115,10 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     });
   }, [apodData, itemIsFavorited, addToFavorites, removeFromFavorites]);
 
-  const closeFullImage = useCallback(() => {
-    setIsFullImageOpen(false);
-  }, []);
-
   const handleDownloadImage = useCallback(async () => {
-    if (!downloadImageUrl || !apodData) {
-      return;
-    }
-
+    if (!downloadImageUrl || !apodData) return;
     setIsDownloading(true);
     setError(null);
-
     try {
       const filename = `${sanitizeFilename(apodData.title)}.jpg`;
       await downloadFile(downloadImageUrl, filename, apodData.title, apodData.date);
@@ -183,48 +136,55 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   }, [downloadImageUrl, apodData]);
 
   return (
-    <div className="apod-page">
-      <div className="page-hero apod-hero">
-        <div className="hero-content">
-          <h1 className="page-title">Astronomy Picture of the Day</h1>
-          <p className="page-subtitle">Explore the universe, one image at a time</p>
+    <div className="min-h-screen">
+      {/* Header */}
+      <div
+        className="page-hero page-hero-image"
+        style={{ backgroundImage: 'url(https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=1400&q=80)' }}
+      >
+        <div className="mx-auto max-w-7xl px-4 text-center lg:px-6">
+          <h1 className="page-title m-0 text-4xl font-bold md:text-5xl">
+            Astronomy Picture of the Day
+          </h1>
+          <p className="mt-3 text-lg text-text-secondary">
+            Daily curated imagery from NASA&apos;s archives
+          </p>
         </div>
       </div>
 
-      <div className="mx-auto max-w-7xl px-4 py-12">
-        {/* APOD History Note */}
-        <div className="apod-history-note">
-          <i className="bi bi-info-circle-fill"></i>
-          <span>NASA's Astronomy Picture of the Day has been published daily since <strong>June 16, 1995</strong>. Use the date picker below to explore over 30 years of cosmic discoveries.</span>
-        </div>
-
+      <div className="mx-auto max-w-7xl px-4 py-12 lg:px-6">
         {/* Date Navigation */}
-        <div className="date-navigation-container">
-          <div className="date-controls">
-            <button className="btn btn-sm btn-outline-light" onClick={goToPreviousDay}>
-              ← Previous Day
-            </button>
-            <div className="date-input-wrapper">
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={handleDateChange}
-                className="date-picker"
-                min={APOD_START_DATE}
-                max={todayStr}
-              />
-              <span className="date-label">Select Date</span>
-            </div>
-            <button className="btn btn-sm btn-outline-light" onClick={goToNextDay}>
-              Next Day →
-            </button>
-            <button className="btn btn-sm btn-primary ml-2" onClick={goToToday}>
-              📅 Today
-            </button>
+        <div className="mb-8 flex flex-wrap items-center justify-center gap-3">
+          <button className="btn btn-outline btn-sm" onClick={goToPreviousDay}>
+            ← Previous
+          </button>
+          <div className="date-input-wrapper">
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={handleDateChange}
+              className="date-picker"
+              min={APOD_START_DATE}
+              max={todayStr}
+            />
           </div>
+          <button className="btn btn-primary btn-sm" onClick={goToToday}>
+            📅 Today
+          </button>
+          <button className="btn btn-outline btn-sm" onClick={goToNextDay}>
+            Next →
+          </button>
         </div>
 
-        {/* Content */}
+        {/* Error */}
+        {error && (
+          <div className="error-alert mb-8">
+            <div className="error-title">⚠️ Error</div>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Loading */}
         {loading && (
           <div className="spinner-container">
             <div className="loading-spinner h-14 w-14" role="status">
@@ -234,102 +194,82 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
           </div>
         )}
 
-        {error && (
-          <div className="error-alert">
-            <div className="error-title">⚠️ Error</div>
-            <p>{error}</p>
-          </div>
-        )}
-
+        {/* APOD Content */}
         {apodData && !loading && (
-          <div className="flex justify-center">
-            <div className="w-full max-w-5xl">
-              <div className="apod-card-large">
-                {/* Media Display */}
-                <div className="media-container">
-                  {apodData.media_type === 'image' ? (
-                    <img
-                      src={apodData.url}
-                      alt={apodData.title}
-                      className="apod-media-large"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : apodData.media_type === 'video' ? (
-                    <iframe
-                      src={apodData.url}
-                      className="apod-media-iframe-large"
-                      title={apodData.title}
-                      allowFullScreen
-                    />
-                  ) : null}
-                </div>
+          <div>
+            {/* Full-width Hero Image */}
+            {apodData.media_type === 'image' ? (
+              <div className="mb-8 overflow-hidden rounded-lg border border-border-glow">
+                <img
+                  src={apodData.url}
+                  alt={apodData.title}
+                  className="w-full object-cover"
+                  style={{ maxHeight: '65vh' }}
+                  loading="eager"
+                  decoding="async"
+                />
+              </div>
+            ) : apodData.media_type === 'video' ? (
+              <div className="mb-8 overflow-hidden rounded-lg border border-border-glow">
+                <iframe
+                  src={apodData.url}
+                  className="aspect-video w-full"
+                  title={apodData.title}
+                  allowFullScreen
+                />
+              </div>
+            ) : null}
 
-                {/* Content */}
-                <div className="apod-content">
-                  <h1 className="apod-title-large">{apodData.title}</h1>
-
-                  <div className="apod-meta">
-                    <span className="meta-item">
-                      📅 {formattedDate}
-                    </span>
-                    <span className="meta-item">
-                      {apodData.media_type === 'image' ? '🖼️ Image' : '🎬 Video'}
-                    </span>
-                    {apodData.copyright && (
-                      <span className="meta-item">© {apodData.copyright}</span>
-                    )}
-                  </div>
-
-                  <div className="apod-actions">
-                    <button className="btn btn-save-favorite" onClick={handleFavoriteToggle}>
-                      <i className={`bi ${itemIsFavorited ? 'bi-heart-fill' : 'bi-heart'}`}></i>
-                      {itemIsFavorited ? 'Saved to Collection' : 'Add to Favorites'}
-                    </button>
-                    <button className="btn btn-save-favorite" onClick={() => navigate(`/media/${apodData.date}`)}>
-                      <i className="bi bi-arrows-fullscreen"></i>
-                      View in Full Screen
-                    </button>
-                    {apodData.media_type === 'image' && downloadImageUrl && (
-                      <button
-                        className="btn btn-save-favorite"
-                        onClick={handleDownloadImage}
-                        disabled={isDownloading}
-                      >
-                        <i className="bi bi-download"></i>
-                        {isDownloading ? 'Downloading...' : 'Download HD (NASA)'}
-                      </button>
-                    )}
-                  </div>
-
-                  <p className="apod-explanation-large">{apodData.explanation}</p>
-
-                  {/* Additional Info */}
-                  <div className="apod-details">
-                    <div className="detail-box">
-                      <h4>About This Image</h4>
-                      <p>
-                        This image is part of NASA's Astronomy Picture of the Day (APOD) collection,
-                        featuring a different image every day from the Earth and Space Sciences Division
-                        of NASA's Goddard Space Flight Center.
-                      </p>
-                    </div>
-                  </div>
-                </div>
+            {/* Title + Date + Actions Row */}
+            <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
+              <div className="flex-1">
+                <h1 className="m-0 mb-2 text-3xl font-bold text-text-bright md:text-4xl">
+                  {apodData.title}
+                </h1>
+                <p className="text-sm text-text-muted">
+                  {formattedDate}
+                  {apodData.copyright && (
+                    <span className="ml-2">| Image Credit: {apodData.copyright}</span>
+                  )}
+                </p>
+              </div>
+              <div className="flex items-center gap-3">
+                <button
+                  className={`btn ${itemIsFavorited ? 'btn-gold' : 'btn-outline'}`}
+                  onClick={handleFavoriteToggle}
+                >
+                  <i className={`bi ${itemIsFavorited ? 'bi-heart-fill' : 'bi-heart'}`}></i>
+                  {itemIsFavorited ? 'Saved to Favorites' : 'Save to Favorites'}
+                </button>
               </div>
             </div>
-          </div>
-        )}
 
-        {isFullImageOpen && apodData?.media_type === 'image' && (
-          <div className="modal-overlay" onClick={closeFullImage}>
-            <div className="modal-content apod-fullscreen-content" onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={closeFullImage} aria-label="Close full image view">
-                x
+            {/* Explanation */}
+            <div className="mb-8 rounded-lg border border-border-glow bg-surface-card p-6 backdrop-blur-xl">
+              <p className="text-sm leading-relaxed text-text-secondary">
+                <strong className="text-text-bright">Explanation:</strong> {apodData.explanation}
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-3">
+              <button
+                className="btn btn-outline"
+                onClick={() => navigate(`/media/${apodData.date}`)}
+              >
+                <i className="bi bi-arrows-fullscreen"></i>
+                View in Full Screen
               </button>
-              <div className="apod-fullscreen-body">
-                <img src={apodData.url} alt={apodData.title} className="apod-fullscreen-image" loading="lazy" decoding="async" />
-              </div>
+              {apodData.media_type === 'image' && downloadImageUrl && (
+                <button
+                  className="btn btn-secondary"
+                  onClick={handleDownloadImage}
+                  disabled={isDownloading}
+                >
+                  <i className="bi bi-download"></i>
+                  {isDownloading ? 'Downloading...' : 'Download HD (NASA)'}
+                </button>
+              )}
             </div>
           </div>
         )}

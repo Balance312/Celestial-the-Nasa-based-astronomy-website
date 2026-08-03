@@ -36,10 +36,10 @@ describe('GalleryPage', () => {
       </MemoryRouter>,
     );
 
-    expect(screen.getByText(/Cosmic Gallery/i)).toBeInTheDocument();
+    expect(screen.getByText(/Universal Space Gallery/i)).toBeInTheDocument();
   });
 
-  it('should render load button with loading state', () => {
+  it('should render filter chips and loading state', () => {
     globalThis.fetch = vi.fn().mockImplementation(() => new Promise(() => {}));
 
     render(
@@ -48,8 +48,10 @@ describe('GalleryPage', () => {
       </MemoryRouter>,
     );
 
-    const loadButton = screen.getByRole('button', { name: /Load new images/i });
-    expect(loadButton).toBeInTheDocument();
-    expect(loadButton).toBeDisabled();
+    expect(screen.getByRole('button', { name: /Images/i })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Video/i })).toBeInTheDocument();
+    const loadingButton = screen.getByRole('button', { name: /Loading/i });
+    expect(loadingButton).toBeInTheDocument();
+    expect(loadingButton).toBeDisabled();
   });
 });
