@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback, useMemo, useTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../pages/pages.css';
 import { getRandomGallery } from '../utils/nasaApi.js';
 import { sanitizeFilename, downloadFile } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
-import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT } from '../constants/apod.js';
+import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT, createItemId } from '../constants/apod.js';
 
 function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
@@ -91,6 +90,25 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     setIsFullscreenMediaOnly(false);
   }, []);
 
+  // Focus trap and Escape key for modal
+  useEffect(() => {
+    if (!selectedImage) return;
+
+    const handleKeyDown = (e) => {
+      if (e.key === 'Escape') {
+        handleCloseModal();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
+    };
+  }, [selectedImage, handleCloseModal]);
+
   const handleDownload = useCallback(async (event, item) => {
     event.stopPropagation();
 
@@ -126,8 +144,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         </div>
       </div>
 
-      <div className="container py-5">
-        <div className="gallery-controls text-center mb-5">
+      <div className="mx-auto max-w-7xl px-4 py-12">
+        <div className="gallery-controls mb-12 text-center">
           <button
             className="btn btn-primary"
             onClick={() => fetchRandomGallery({ preferCache: false })}
@@ -156,8 +174,8 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
 
         {loading && gallery.length === 0 && (
           <div className="spinner-container">
-            <div className="spinner-border spinner-border-lg" role="status">
-              <span className="visually-hidden">Loading...</span>
+            <div className="loading-spinner h-14 w-14" role="status">
+              <span className="sr-only">Loading...</span>
             </div>
             <p className="loading-text">Gathering cosmic wonders...</p>
           </div>
@@ -167,7 +185,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
           <>
             <div className="gallery-grid" role="grid" aria-label="Gallery of NASA images and videos">
               {gallery.map((item) => {
-                const itemId = `${item.date}-${item.title}`;
+                const itemId = createItemId(item);
                 const itemIsFavorited = isFavorited(item);
 
                 return (

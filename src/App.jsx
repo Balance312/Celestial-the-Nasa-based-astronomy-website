@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from "react";
-      import { SpeedInsights } from "@vercel/speed-insights/react";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import Router from "./Router.jsx";
-import { clearApiCache } from "./utils/nasaApi.js";
-import { CACHE_KEYS } from "./constants/apod.js";
-import "./app.css";
-
-// Import Bootstrap CSS for styling (Tailwind + Bootstrap hybrid approach)
-import "../bootstrap/bootstrap.min.css";
+import { CACHE_KEYS, createItemId } from "./constants/apod.js";
+import useTheme from "./hooks/useTheme.js";
 
 const parseStoredValue = (value, fallback) => {
   try {
@@ -17,9 +13,6 @@ const parseStoredValue = (value, fallback) => {
   }
 };
 
-const createItemId = (item) => `${item.date}-${item.title}`;
-
-// Initialize state from localStorage immediately
 const initializeFavorites = () => {
   const stored = localStorage.getItem(CACHE_KEYS.FAVORITES);
   const parsed = parseStoredValue(stored, []);
@@ -29,8 +22,8 @@ const initializeFavorites = () => {
 function App() {
   const [favorites, setFavorites] = useState(initializeFavorites);
   const isFirstPersist = useRef(true);
+  const { theme, toggleTheme } = useTheme();
 
-  // Persist favorites to localStorage whenever they change
   useEffect(() => {
     if (isFirstPersist.current) {
       return;
@@ -38,7 +31,6 @@ function App() {
     localStorage.setItem(CACHE_KEYS.FAVORITES, JSON.stringify(favorites));
   }, [favorites]);
 
-  // Avoid overwriting storage on the first render cycle.
   useEffect(() => {
     isFirstPersist.current = false;
   }, []);
@@ -73,9 +65,8 @@ function App() {
   const removeFromFavorites = useCallback((id) => {
     setFavorites((prev) => {
       const updated = prev.filter((item) => item.id !== id);
-      
+
       try {
-        // Remove item from localStorage - delete key if empty, otherwise update
         if (updated.length === 0) {
           localStorage.removeItem(CACHE_KEYS.FAVORITES);
         } else {
@@ -83,12 +74,8 @@ function App() {
         }
       } catch (error) {
         console.error('Failed to persist favorites:', error);
-        // State still updated, but warn user if needed
       }
-      
-      // Clear all API cache to free up memory
-      clearApiCache();
-      
+
       return updated;
     });
   }, []);
@@ -103,6 +90,8 @@ function App() {
         addToFavorites={addToFavorites}
         removeFromFavorites={removeFromFavorites}
         isFavorited={isFavorited}
+        theme={theme}
+        toggleTheme={toggleTheme}
       />
     </>
   );

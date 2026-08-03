@@ -1,13 +1,12 @@
-import "./navbar.css";
 import { NavLink, useLocation } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
+import ThemeToggle from "./ThemeToggle.jsx";
 
-function Navbar({ favoritesCount }) {
+function Navbar({ favoritesCount, theme, toggleTheme }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const location = useLocation();
   const prevLocationRef = useRef(location);
 
-  // Close menu when navigation occurs
   useEffect(() => {
     if (prevLocationRef.current !== location) {
       setIsMenuOpen(false);
@@ -15,72 +14,61 @@ function Navbar({ favoritesCount }) {
     }
   }, [location]);
 
-  const handleToggleMenu = () => {
-    setIsMenuOpen(!isMenuOpen);
-  };
-
-  const handleMenuItemClick = () => {
-    setIsMenuOpen(false);
-  };
+  const navLinks = [
+    { to: "/", label: "Home", end: true },
+    { to: "/apod", label: "Today's APOD" },
+    { to: "/gallery", label: "Gallery" },
+    { to: "/epic", label: "Earth EPIC" },
+    { to: "/profile", label: "My Space Collection", badge: favoritesCount },
+    { to: "/about", label: "About" },
+  ];
 
   return (
-    <div>
-      <nav className="navbar navbar-expand-lg navbar-background" data-bs-theme="dark">
-        <div className="container-fluid">
-          <NavLink className="navbar-brand font-weight-bold" to="/">
-            <h1 className="Celestial">Celestial</h1>
-          </NavLink>
-          <button
-            className="navbar-toggler"
-            type="button"
-            aria-controls="navbarSupportedContent"
-            aria-expanded={isMenuOpen}
-            aria-label="Toggle navigation"
-            onClick={handleToggleMenu}
-          >
-            <span className="navbar-toggler-icon"></span>
-          </button>
-          <div
-            className={`collapse navbar-collapse ${isMenuOpen ? "show" : ""}`}
-            id="navbarSupportedContent"
-          >
-            <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/" end onClick={handleMenuItemClick}>
-                  Home
+    <nav className="navbar-background">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-3 lg:px-6">
+        <NavLink to="/" className="no-underline">
+          <h1 className="Celestial">Celestial</h1>
+        </NavLink>
+
+        <button
+          type="button"
+          className="navbar-toggler"
+          aria-controls="navbarSupportedContent"
+          aria-expanded={isMenuOpen}
+          aria-label="Toggle navigation"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <svg className="h-6 w-6" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
+            <path fillRule="evenodd" d="M3 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 5a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+          </svg>
+        </button>
+
+        <div
+          id="navbarSupportedContent"
+          className={`mobile-nav-panel ${isMenuOpen ? "open" : ""}`}
+        >
+          <ul className="flex flex-col lg:flex-row lg:items-center lg:gap-1">
+            {navLinks.map(({ to, label, end, badge }) => (
+              <li key={to} className="mobile-nav-item">
+                <NavLink
+                  to={to}
+                  end={end}
+                  className="nav-link"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  {label}
+                  {badge !== undefined && (
+                    <span className="collection-badge ml-2">{badge}</span>
+                  )}
                 </NavLink>
               </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/apod" onClick={handleMenuItemClick}>
-                  Today's APOD
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/gallery" onClick={handleMenuItemClick}>
-                  Gallery
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/epic" onClick={handleMenuItemClick}>
-                  Earth EPIC
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/profile" onClick={handleMenuItemClick}>
-                  My Space Collection
-                  <span className="badge rounded-pill collection-badge ms-2">{favoritesCount}</span>
-                </NavLink>
-              </li>
-              <li className="nav-item">
-                <NavLink className="nav-link" to="/about" onClick={handleMenuItemClick}>
-                  About
-                </NavLink>
-              </li>
-            </ul>
-          </div>
+            ))}
+          </ul>
         </div>
-      </nav>
-    </div>
+
+        <ThemeToggle theme={theme} toggleTheme={toggleTheme} />
+      </div>
+    </nav>
   );
 }
 

@@ -1,128 +1,37 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
-import { useLocation } from "react-router-dom";
-import { sendChatMessage } from "../utils/chatbotService.js";
-import "./FloatingChatBubble.css";
-
-const BUBBLE_CHAT_STORAGE_KEY = "celestialBubbleChatMessages";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useChat } from "../hooks/useChat.js";
 
 export default function FloatingChatBubble() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
   const [showNotification, setShowNotification] = useState(false);
-  const [messages, setMessages] = useState(() => {
-    const stored = localStorage.getItem(BUBBLE_CHAT_STORAGE_KEY);
-    if (stored) {
-      try {
-        return JSON.parse(stored);
-      } catch (e) {
-        console.error("Failed to parse stored messages", e);
-      }
-    }
-    return [
-      {
-        id: 1,
-        role: "assistant",
-        content: "Hi! 👋 Ask me anything about space and astronomy.",
-      },
-    ];
-  });
-  const [inputValue, setInputValue] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const messagesEndRef = useRef(null);
 
-  // Check if on chat page  
+  const {
+    messages,
+    inputValue,
+    setInputValue,
+    loading,
+    error,
+    messagesEndRef,
+    handleSendMessage,
+    clearChat,
+  } = useChat();
+
   const isOnChatPage = location.pathname === "/chat";
 
-  // Persist messages to localStorage
-  useEffect(() => {
-    if (!isOnChatPage) {
-      localStorage.setItem(BUBBLE_CHAT_STORAGE_KEY, JSON.stringify(messages));
-    }
-  }, [messages, isOnChatPage]);
-
-  const scrollToBottom = () => {
-    const messagesContainer = document.querySelector(".chat-window-messages");
-    if (messagesContainer) {
-      messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    }
-  };
-
-  useEffect(() => {
-    if (!isOnChatPage) {
-      scrollToBottom();
-    }
-  }, [messages, isOnChatPage]);
-
-  // Don't show bubble on chat page
   if (isOnChatPage) {
     return null;
   }
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-
-    if (!inputValue.trim()) return;
-
-    setError("");
-    const userMessage = inputValue;
-    setInputValue("");
-
-    const userMsgObj = {
-      id: messages.length + 1,
-      role: "user",
-      content: userMessage,
-    };
-    setMessages((prev) => [...prev, userMsgObj]);
-
-    setLoading(true);
-
-    try {
-      const conversationHistory = messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
-
-      const aiResponse = await sendChatMessage(userMessage, conversationHistory);
-
-      const aiMsgObj = {
-        id: messages.length + 2,
-        role: "assistant",
-        content: aiResponse,
-      };
-
-      setMessages((prev) => [...prev, aiMsgObj]);
-    } catch (err) {
-      setError(err.message || "Failed to get response. Please try again.");
-      console.error("Error:", err);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleGoToFullChat = () => {
-    // Save messages to localStorage so full chat page can load them
-    localStorage.setItem(BUBBLE_CHAT_STORAGE_KEY, JSON.stringify(messages));
-    window.location.href = "/chat";
-  };
-
-  const clearChat = () => {
-    const initialMessages = [
-      {
-        id: 1,
-        role: "assistant",
-        content: "Hi! 👋 Ask me anything about space and astronomy.",
-      },
-    ];
-    setMessages(initialMessages);
-    localStorage.setItem(BUBBLE_CHAT_STORAGE_KEY, JSON.stringify(initialMessages));
-    setError("");
+    navigate("/chat");
   };
 
   return createPortal(
     <>
-      {/* Floating Bubble Button */}
       <button
         className="floating-chat-bubble"
         onClick={() => setIsOpen(!isOpen)}
@@ -131,16 +40,15 @@ export default function FloatingChatBubble() {
         title="Chat with cosmic assistant"
       >
         <span className="bubble-icon">🤖</span>
-        <div className={`ai-notification ${showNotification ? 'visible' : ''}`}>
-          💬 AI Chatbot
+        <div className={`ai-notification ${showNotification ? "visible" : ""}`}>
+          AI Chatbot
         </div>
       </button>
 
-      {/* Chat Window */}
       {isOpen && (
         <div className="floating-chat-window">
           <div className="chat-window-header">
-            <h3>🌌 Cosmic Chat</h3>
+            <h3>Cosmic Chat</h3>
             <div className="header-actions">
               <button
                 onClick={handleGoToFullChat}
@@ -187,7 +95,7 @@ export default function FloatingChatBubble() {
 
             {error && (
               <div className="error-message">
-                <span>⚠ {error}</span>
+                <span>{error}</span>
               </div>
             )}
 
@@ -208,12 +116,12 @@ export default function FloatingChatBubble() {
               disabled={loading || !inputValue.trim()}
               className="send-btn-small"
             >
-              {loading ? "..." : "→"}
+              {loading ? "..." : "\u2192"}
             </button>
           </form>
         </div>
       )}
     </>,
-    document.body
+    document.body,
   );
 }

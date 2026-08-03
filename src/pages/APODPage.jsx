@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback, useTransition, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../pages/pages.css';
 import { getApodByDate } from '../utils/nasaApi.js';
 import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
-import { APOD_START_DATE, DATE_MESSAGES, API_ERROR_MESSAGES } from '../constants/apod.js';
+import { APOD_START_DATE, DATE_MESSAGES, API_ERROR_MESSAGES, getDefaultDate } from '../constants/apod.js';
 
 
 
@@ -14,11 +13,6 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [, startTransition] = useTransition();
-  
-  // Default to today's date
-  const getDefaultDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
   
   const [selectedDate, setSelectedDate] = useState(getDefaultDate());
   const [isFullImageOpen, setIsFullImageOpen] = useState(false);
@@ -197,7 +191,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         </div>
       </div>
 
-      <div className="container py-5">
+      <div className="mx-auto max-w-7xl px-4 py-12">
         {/* APOD History Note */}
         <div className="apod-history-note">
           <i className="bi bi-info-circle-fill"></i>
@@ -224,7 +218,7 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
             <button className="btn btn-sm btn-outline-light" onClick={goToNextDay}>
               Next Day →
             </button>
-            <button className="btn btn-sm btn-primary ms-2" onClick={goToToday}>
+            <button className="btn btn-sm btn-primary ml-2" onClick={goToToday}>
               📅 Today
             </button>
           </div>
@@ -233,8 +227,8 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         {/* Content */}
         {loading && (
           <div className="spinner-container">
-            <div className="spinner-border spinner-border-lg" role="status">
-              <span className="visually-hidden">Loading...</span>
+            <div className="loading-spinner h-14 w-14" role="status">
+              <span className="sr-only">Loading...</span>
             </div>
             <p className="loading-text">Fetching cosmic wonders...</p>
           </div>
@@ -248,8 +242,8 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         )}
 
         {apodData && !loading && (
-          <div className="row justify-content-center">
-            <div className="col-lg-10">
+          <div className="flex justify-center">
+            <div className="w-full max-w-5xl">
               <div className="apod-card-large">
                 {/* Media Display */}
                 <div className="media-container">

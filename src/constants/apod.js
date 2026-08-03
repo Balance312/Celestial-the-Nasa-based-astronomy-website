@@ -49,3 +49,16 @@ export const VIDEO_IFRAME_ATTRS = {
 
 // Mobile device detection pattern
 export const MOBILE_PATTERN = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i;
+
+/**
+ * Get today's date as a YYYY-MM-DD string
+ * @returns {string} Today's date in YYYY-MM-DD format
+ */
+export const getDefaultDate = () => new Date().toISOString().split('T')[0];
+
+/**
+ * Create a stable unique ID for an APOD item
+ * @param {Object} item - APOD item with date and title
+ * @returns {string} Stable ID in format "date-title"
+ */
+export const createItemId = (item) => `${item.date}-${item.title}`;

@@ -1,10 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
-import '../pages/pages.css';
 import { getApodByDate } from '../utils/nasaApi.js';
 import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
-import { API_ERROR_MESSAGES, MOBILE_PATTERN } from '../constants/apod.js';
+import { API_ERROR_MESSAGES, createItemId } from '../constants/apod.js';
 
 function MediaView({
   addToFavorites,
@@ -94,8 +93,8 @@ function MediaView({
     return (
       <div className="media-view-page">
         <div className="spinner-container">
-          <div className="spinner-border spinner-border-lg" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="loading-spinner h-14 w-14" role="status">
+            <span className="sr-only">Loading...</span>
           </div>
           <p className="loading-text">Loading media...</p>
         </div>
@@ -106,7 +105,7 @@ function MediaView({
   if (error || !media) {
     return (
       <div className="media-view-page">
-        <div className="container py-5">
+        <div className="mx-auto max-w-7xl px-4 py-12">
           <div className="error-alert">
             <div className="error-title">⚠️ Error</div>
             <p>{error || 'Media not found'}</p>
@@ -120,7 +119,7 @@ function MediaView({
   }
 
   const itemIsFavorited = isFavorited(media);
-  const mediaItemId = media.date ? `${media.date}-${media.title}` : media.id;
+  const mediaItemId = media.date ? createItemId(media) : media.id;
   
   // Determine if this is APOD data (has media_type) or image library data (has thumbnail)
   const isApodData = media.media_type !== undefined;
@@ -171,8 +170,11 @@ function MediaView({
               loading="lazy"
               decoding="async"
               onError={(e) => {
-                e.target.src = '';
-                e.target.parentElement.innerHTML = '<div style="width: 100%; height: 500px; background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(96, 165, 250, 0.2)); display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; color: rgba(96, 165, 250, 0.7); border-radius: 8px;"><i class="bi bi-image" style="font-size: 3rem;"></i><span>Image unavailable</span></div>';
+                e.target.style.display = 'none';
+                const fallback = document.createElement('div');
+                fallback.className = 'media-fallback-container';
+                fallback.innerHTML = '<i class="bi bi-image media-fallback-icon"></i><span>Image unavailable</span>';
+                e.target.parentElement.appendChild(fallback);
               }}
             />
           )}
@@ -257,7 +259,7 @@ function MediaView({
                 <strong>Keywords:</strong>
                 <div className="keywords-container mt-2">
                   {media.keywords.map((kw, idx) => (
-                    <span key={idx} className="badge bg-primary me-2 mb-2">
+                    <span key={idx} className="badge mr-2 mb-2">
                       {kw}
                     </span>
                   ))}
@@ -269,60 +271,28 @@ function MediaView({
 
         {/* Related Images Gallery - for Image Library items */}
         {isImageLibraryData && relatedImages && relatedImages.length > 0 && (
-          <div className="media-gallery-section" style={{ marginTop: '3rem', paddingTop: '2rem', borderTop: '1px solid rgba(147, 112, 219, 0.3)' }}>
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1.5rem', color: '#9370db' }}>Related Photos from Collection</h2>
-            <div className="gallery-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '1rem' }}>
+          <div className="related-gallery-section">
+            <h2 className="related-gallery-title">Related Photos from Collection</h2>
+            <div className="related-gallery-grid">
               {relatedImages.map((image, idx) => (
-                <div key={idx} className="gallery-item" style={{
-                  border: '1px solid rgba(147, 112, 219, 0.3)',
-                  borderRadius: '8px',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease'
-                }} onClick={() => {
-                  setMedia(image);
-                  window.scrollTo(0, 0);
-                }}>
-                  <div style={{
-                    width: '100%',
-                    paddingBottom: '100%',
-                    position: 'relative',
-                    backgroundColor: 'rgba(147, 112, 219, 0.1)'
-                  }}>
+                <div
+                  key={idx}
+                  className="related-gallery-item"
+                  onClick={() => {
+                    setMedia(image);
+                    window.scrollTo(0, 0);
+                  }}
+                >
+                  <div className="related-gallery-thumb">
                     <img
                       src={image.thumbnail}
                       alt={image.title}
                       loading="lazy"
                       decoding="async"
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        objectFit: 'cover'
-                      }}
                     />
                   </div>
-                  <div style={{
-                    padding: '0.75rem',
-                    backgroundColor: '#1a0d2e',
-                    minHeight: '60px',
-                    display: 'flex',
-                    alignItems: 'center'
-                  }}>
-                    <span style={{
-                      color: '#9370db',
-                      fontSize: '0.75rem',
-                      fontWeight: '500',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      display: '-webkit-box',
-                      WebkitLineClamp: 2,
-                      WebkitBoxOrient: 'vertical'
-                    }}>
-                      {image.title}
-                    </span>
+                  <div className="related-gallery-label">
+                    <span>{image.title}</span>
                   </div>
                 </div>
               ))}

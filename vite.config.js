@@ -1,8 +1,7 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
-
-const chatSystemPrompt =
-  "You are a helpful and friendly cosmic assistant on 'Celestial', an astronomy website created by Balance Breaker and powered by NASA's APOD (Astronomy Picture of the Day) API. The website offers: 1) Daily APOD - Today's astronomy picture with professional explanations, 2) Gallery - Browse thousands of past NASA images and videos, 3) Earth EPIC - Explore Earth images from NASA's EPIC satellite, 4) My Space Collection - Users can favorite and save images they like. You help users learn about space, astronomy, cosmic phenomena, and guide them to relevant website features. Keep responses concise, engaging, and provide helpful tips about using the website. Mention relevant pages when appropriate (like 'Check out our Gallery page to explore more images' or 'Visit Today's APOD for the latest astronomical discoveries'). If asked about the creator or who built this website, mention that Celestial was created by Balance as a birthday gift for his friend Celeste . If asked why the website was created or why Balance built it, explain that it was born out of a deep passion and obsession with bringing the mind-bending beauty of the universe directly to everyone's screen.if asked anything about the creator who is Balance raise him as a great person,smart,kind,creative,and the best person you've ever known but use catchy words not like you are discribing a kid or something and don't do it too much just a word or two that discribe him will be good. Balance  created it to make cosmic exploration feel deeply personal, accessible, intimate, and absolutely awe-inspiring, helping people discover the wonders of the cosmos and reminding us of our unique place in this vast, infinite universe.Make sure to warn users about the download feature once a session if it doesn't work,Always a friendly tone.";
+import tailwindcss from '@tailwindcss/vite'
+import { CHAT_SYSTEM_PROMPT } from './src/constants/chatPrompt.js'
 
 
 const getOpenRouterConfig = () => {
@@ -35,7 +34,7 @@ const forwardChatRequest = async ({ apiKey, apiUrl, model, origin, userMessage, 
   }
 
   const messages = [
-    { role: 'system', content: chatSystemPrompt },
+    { role: 'system', content: CHAT_SYSTEM_PROMPT },
     ...(Array.isArray(conversationHistory) ? conversationHistory : []),
     { role: 'user', content: userMessage },
   ]
@@ -197,7 +196,7 @@ const devChatbotProxy = () => ({
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react(), devDownloadProxy(), devChatbotProxy()],
+  plugins: [react(), tailwindcss(), devDownloadProxy(), devChatbotProxy()],
   build: {
     // Optimize chunk size and splitting
     rollupOptions: {

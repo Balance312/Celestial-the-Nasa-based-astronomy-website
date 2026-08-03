@@ -3,8 +3,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import Navbar from "./Components/Navbar.jsx";
 import FloatingChatBubble from "./Components/FloatingChatBubble.jsx";
 import SeoManager from "./Components/SeoManager.jsx";
+import Footer from "./Components/Footer.jsx";
 
-const Home = lazy(() => import("./Home.jsx"));
+const Home = lazy(() => import("./pages/Home.jsx"));
 const APODPage = lazy(() => import("./pages/APODPage.jsx"));
 const GalleryPage = lazy(() => import("./pages/GalleryPage.jsx"));
 const AboutPage = lazy(() => import("./pages/AboutPage.jsx"));
@@ -18,17 +19,23 @@ function Router({
   addToFavorites,
   removeFromFavorites,
   isFavorited,
+  theme,
+  toggleTheme,
 }) {
   return (
     <BrowserRouter>
+      <a href="#main-content" className="skip-to-content">
+        Skip to content
+      </a>
       <SeoManager />
-      <Navbar favoritesCount={favorites.length} />
+      <Navbar favoritesCount={favorites.length} theme={theme} toggleTheme={toggleTheme} />
       <FloatingChatBubble />
+      <main id="main-content">
       <Suspense
         fallback={
           <div className="spinner-container">
-            <div className="spinner-border spinner-border-lg" role="status">
-              <span className="visually-hidden">Loading...</span>
+            <div className="loading-spinner" role="status">
+              <span className="sr-only">Loading...</span>
             </div>
             <p className="loading-text">Loading page...</p>
           </div>
@@ -74,7 +81,9 @@ function Router({
           />
           <Route path="/chat" element={<ChatBot />} />
         </Routes>
+        <Footer />
       </Suspense>
+      </main>
     </BrowserRouter>
   );
 }

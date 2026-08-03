@@ -1,24 +1,34 @@
-import { useEffect, useState, useCallback, useMemo, useTransition } from 'react';
-import '../pages/pages.css';
+import { useEffect, useState, useCallback, useMemo, useTransition, useRef } from 'react';
 import { getEpicLatest, getEpicByDate, getEpicImageUrl } from '../utils/nasaApi.js';
+import { getNasaApiKey } from '../utils/apiConfig.js';
+import { getDefaultDate } from '../constants/apod.js';
 
 function EpicPage() {
   const [epicData, setEpicData] = useState([]);
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const getDefaultDate = () => {
-    return new Date().toISOString().split('T')[0];
-  };
   const [selectedDate, setSelectedDate] = useState(getDefaultDate());
   const [, startTransition] = useTransition();
+  const errorTimerRef = useRef(null);
+
+  const clearErrorTimer = useCallback(() => {
+    if (errorTimerRef.current) {
+      clearTimeout(errorTimerRef.current);
+      errorTimerRef.current = null;
+    }
+  }, []);
+
+  useEffect(() => {
+    return () => clearErrorTimer();
+  }, [clearErrorTimer]);
 
   const fetchEpicData = useCallback(async (date, signal) => {
     try {
       setLoading(true);
       setError(null);
 
-      const apiKey = import.meta.env.VITE_NASA_API_KEY;
+      const apiKey = getNasaApiKey();
       if (!apiKey) {
         throw new Error('NASA API key is not configured.');
       }
@@ -58,8 +68,8 @@ function EpicPage() {
                 day: 'numeric',
               });
               setError(`📌 No photos available for that date. Showing the most recent photos from ${formattedCurrentDate} instead.`);
-              // Clear the error after 5 seconds
-              setTimeout(() => setError(null), 5000);
+              clearErrorTimer();
+              errorTimerRef.current = setTimeout(() => setError(null), 5000);
             }
 
             return;
@@ -91,7 +101,8 @@ function EpicPage() {
               day: 'numeric',
             });
             setError(`📌 We couldn't find photos near that date. Here are the latest available photos from ${formattedLatestDate}.`);
-            setTimeout(() => setError(null), 5000);
+            clearErrorTimer();
+            errorTimerRef.current = setTimeout(() => setError(null), 5000);
             return;
           }
         } catch (err) {
@@ -124,7 +135,7 @@ function EpicPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [clearErrorTimer]);
 
   const handleDateChange = useCallback((e) => {
     const newDate = e.target.value;
@@ -196,7 +207,7 @@ function EpicPage() {
     });
   }, [todayStr]);
 
-  const apiKey = useMemo(() => import.meta.env.VITE_NASA_API_KEY, []);
+  const apiKey = useMemo(() => getNasaApiKey(), []);
 
   const selectedImageUrl = useMemo(() => {
     if (!selectedImage) return '';
@@ -223,9 +234,8 @@ function EpicPage() {
         </div>
       </div>
 
-      <div className="container py-5">
-        {/* Date Navigation Controls */}
-        <div className="date-navigation-container mb-4">
+      <div className="mx-auto max-w-7xl px-4 py-12">
+        <div className="date-navigation-container mb-6">
           <div className="date-controls">
             <button 
               className="btn btn-outline-light"
@@ -264,8 +274,7 @@ function EpicPage() {
           </div>
         </div>
 
-        {/* Info Banner */}
-        <div className="epic-info-banner mb-4">
+        <div className="epic-info-banner mb-6">
           <i className="bi bi-info-circle-fill"></i>
           <div>
             <strong>EPIC Satellite:</strong> NASA's DSCOVR satellite captures Earth imagery from 1 million miles away at the L1 Lagrange Point, providing unique perspectives of our entire planet's sunlit side.
@@ -283,8 +292,8 @@ function EpicPage() {
         {/* Loading State */}
         {loading && epicData.length === 0 && (
           <div className="spinner-container">
-            <div className="spinner-border spinner-border-lg" role="status">
-              <span className="visually-hidden">Loading...</span>
+            <div className="loading-spinner h-14 w-14" role="status">
+              <span className="sr-only">Loading...</span>
             </div>
             <p className="loading-text">Retrieving Earth imagery...</p>
           </div>
@@ -295,8 +304,8 @@ function EpicPage() {
           <>
             {/* Selected Image Display */}
             {selectedImage && (
-              <div className="row justify-content-center mb-5">
-                <div className="col-lg-10">
+              <div className="mb-12 flex justify-center">
+                <div className="w-full max-w-5xl">
                   <div className="epic-main-container">
                     <div className="epic-image-display">
                       <img
@@ -306,7 +315,7 @@ function EpicPage() {
                         onError={(e) => {
                           // Fallback to ensure API key is included
                           if (!e.target.src.includes('api_key')) {
-                            e.target.src = getEpicImageUrl(selectedImage.date, selectedImage, import.meta.env.VITE_NASA_API_KEY);
+                            e.target.src = getEpicImageUrl(selectedImage.date, selectedImage, getNasaApiKey());
                           }
                         }}
                       />
@@ -351,7 +360,7 @@ function EpicPage() {
                           approximately <strong>1 million miles</strong> from Earth. From this unique vantage point, the satellite provides daily imagery 
                           of the full sunlit side of Earth, allowing us to observe our planet in its entirety and monitor atmospheric phenomena.
                         </p>
-                        <p style={{ marginTop: '15px', fontSize: '0.9rem', color: 'rgba(255, 255, 255, 0.7)' }}>
+                        <p className="epic-description-extra">
                           The EPIC instrument captures images in 10 different wavelengths, enabling scientists to study various atmospheric and surface properties.
                         </p>
                       </div>
@@ -394,17 +403,13 @@ function EpicPage() {
         )}
 
         {!loading && epicData.length === 0 && !error && (
-          <div className="text-center py-5">
-            <p className="text-muted">
-              <span style={{ fontSize: '2rem', marginRight: '10px' }}>🌍</span>
-              <br />
-              <strong>No Earth imagery available</strong>
-              <br />
-              <span style={{ fontSize: '0.95rem' }}>
-                We couldn't find EPIC imagery for the dates you searched. 
-                EPIC data is available from June 13, 2015 onwards. 
-                Please try selecting a date between June 13, 2015 and today.
-              </span>
+          <div className="epic-empty-state">
+            <div className="epic-empty-icon">🌍</div>
+            <strong>No Earth imagery available</strong>
+            <p className="epic-empty-text">
+              We couldn't find EPIC imagery for the dates you searched.
+              EPIC data is available from June 13, 2015 onwards.
+              Please try selecting a date between June 13, 2015 and today.
             </p>
           </div>
         )}
