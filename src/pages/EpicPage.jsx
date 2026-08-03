@@ -12,6 +12,8 @@ function EpicPage() {
   const [isPlaying, setIsPlaying] = useState(false);
 
   const playIntervalRef = useRef(null);
+  const currentIndexRef = useRef(0);
+  const epicDataRef = useRef(epicData);
   const [, startTransition] = useTransition();
   const errorTimerRef = useRef(null);
 
@@ -197,13 +199,22 @@ function EpicPage() {
   }, []);
 
   useEffect(() => {
+    epicDataRef.current = epicData;
+  }, [epicData]);
+
+  useEffect(() => {
+    if (selectedImage && epicData.length > 0) {
+      const idx = epicData.findIndex(img => img.image === selectedImage.image);
+      if (idx >= 0) currentIndexRef.current = idx;
+    }
+  }, [selectedImage, epicData]);
+
+  useEffect(() => {
     if (isPlaying && epicData.length > 1) {
       playIntervalRef.current = setInterval(() => {
-        setSelectedImage(prev => {
-          const currentIndex = epicData.findIndex(img => img.image === prev?.image);
-          const nextIndex = (currentIndex + 1) % epicData.length;
-          return epicData[nextIndex];
-        });
+        const data = epicDataRef.current;
+        currentIndexRef.current = (currentIndexRef.current + 1) % data.length;
+        setSelectedImage(data[currentIndexRef.current]);
       }, 2000);
     } else if (playIntervalRef.current) {
       clearInterval(playIntervalRef.current);

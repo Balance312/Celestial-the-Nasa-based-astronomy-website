@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo, useTransition } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { getRandomGallery, searchNasaLibrary } from '../utils/nasaApi.js';
 import { sanitizeFilename, downloadFile } from '../utils/downloadHandler.js';
@@ -8,11 +8,9 @@ import { API_ERROR_MESSAGES, GALLERY_ITEMS_COUNT, createItemId } from '../consta
 function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const [, startTransition] = useTransition();
   const [gallery, setGallery] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedImage, setSelectedImage] = useState(null);
   const [downloadingId, setDownloadingId] = useState(null);
   const [downloadError, setDownloadError] = useState(null);
   const [searchQuery, setSearchQuery] = useState(searchParams.get('q') || '');
@@ -95,16 +93,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     return () => controller.abort();
   }, [searchParams, fetchSearchResults, fetchRandomGallery]);
 
-  const convertedVideoUrl = useMemo(() => {
-    if (!selectedImage?.url) return '';
-    const url = selectedImage.url;
-    const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/)([a-zA-Z0-9_-]+)/);
-    if (youtubeMatch) return `https://www.youtube.com/embed/${youtubeMatch[1]}?autoplay=1`;
-    const vimeoMatch = url.match(/vimeo\.com\/(\d+)/);
-    if (vimeoMatch) return `https://player.vimeo.com/video/${vimeoMatch[1]}?autoplay=1`;
-    return url;
-  }, [selectedImage?.url]);
-
   const filteredGallery = useMemo(() => {
     let items = gallery;
     if (!isSearchMode && searchQuery) {
@@ -123,18 +111,13 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   }), [gallery]);
 
   const handleGalleryItemClick = useCallback((item) => {
-    startTransition(() => setSelectedImage(item));
-  }, []);
-
-  const handleCloseModal = useCallback(() => setSelectedImage(null), []);
-
-  useEffect(() => {
-    if (!selectedImage) return;
-    const handleKeyDown = (e) => { if (e.key === 'Escape') handleCloseModal(); };
-    document.addEventListener('keydown', handleKeyDown);
-    document.body.style.overflow = 'hidden';
-    return () => { document.removeEventListener('keydown', handleKeyDown); document.body.style.overflow = ''; };
-  }, [selectedImage, handleCloseModal]);
+    const itemId = createItemId(item);
+    if (isSearchMode) {
+      navigate(`/media/${itemId}`, { state: { image: item } });
+    } else {
+      navigate(`/media/${item.date}`);
+    }
+  }, [navigate, isSearchMode]);
 
   const handleDownload = useCallback(async (event, item) => {
     event.stopPropagation();
@@ -369,63 +352,6 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
         )}
 
         {/* Modal */}
-        {selectedImage && (
-          <div className="modal-overlay" onClick={handleCloseModal}>
-            <div className="modal-content" style={{ maxWidth: '900px' }} onClick={(e) => e.stopPropagation()}>
-              <button className="modal-close" onClick={handleCloseModal}>
-                <i className="bi bi-x-lg"></i>
-              </button>
-              <div className="modal-body">
-                {selectedImage.media_type === 'image' ? (
-                  <img
-                    src={selectedImage.hdurl || selectedImage.url}
-                    alt={selectedImage.title}
-                    className="modal-image"
-                    loading="lazy"
-                    decoding="async"
-                  />
-                ) : (
-                  <div className="flex items-center justify-center">
-                    <iframe
-                      src={convertedVideoUrl}
-                      className="aspect-video w-full rounded-lg"
-                      title={selectedImage.title}
-                      allowFullScreen
-                      allow="autoplay; fullscreen; encrypted-media; accelerometer; gyroscope"
-                      frameBorder="0"
-                    />
-                  </div>
-                )}
-              </div>
-              <div className="p-6">
-                <h2 className="mb-2 text-xl font-bold text-text-bright">{selectedImage.title}</h2>
-                <p className="mb-2 text-sm text-text-muted">{selectedImage.date}</p>
-                {selectedImage.copyright && (
-                  <p className="mb-3 text-xs text-text-muted">&copy; {selectedImage.copyright}</p>
-                )}
-                <p className="mb-4 text-sm leading-relaxed text-text-secondary">{selectedImage.explanation}</p>
-                <div className="flex gap-3">
-                  {selectedImage.media_type === 'image' && (
-                    <button
-                      className="btn btn-primary btn-sm"
-                      onClick={async () => {
-                        try {
-                          const url = selectedImage.hdurl || selectedImage.url;
-                          const ext = url.split('.').pop()?.split('?')[0] || 'jpg';
-                          await downloadFile(url, `${sanitizeFilename(selectedImage.title)}.${ext}`, selectedImage.title, selectedImage.date);
-                        } catch (err) {
-                          console.error('Download failed:', err);
-                        }
-                      }}
-                    >
-                      <i className="bi bi-download"></i> Download High-Res
-                    </button>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );

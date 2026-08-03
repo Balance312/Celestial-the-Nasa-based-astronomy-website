@@ -520,11 +520,11 @@
 
   /* ── Media View ── */
   .media-view-page {
-    @apply px-9 py-12;
+    @apply min-h-screen px-4 py-6 sm:px-6 sm:py-8 lg:px-9 lg:py-12;
   }
 
   .media-view-container {
-    @apply mx-auto flex max-w-[1200px] flex-col gap-9;
+    @apply mx-auto flex max-w-[1200px] flex-col gap-6 lg:gap-9;
   }
 
   .media-back-btn {
@@ -544,6 +544,10 @@
     @apply block w-full;
   }
 
+  .media-image {
+    @apply max-h-[70vh] object-contain;
+  }
+
   .media-controls {
     @apply flex flex-wrap justify-between gap-4;
   }
@@ -554,7 +558,7 @@
   }
 
   .media-info-section {
-    @apply rounded-lg border border-border-glow bg-surface-card p-9 backdrop-blur-xl;
+    @apply rounded-lg border border-border-glow bg-surface-card p-4 backdrop-blur-xl sm:p-6 lg:p-9;
   }
 
   .media-info-content {
