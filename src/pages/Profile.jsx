@@ -154,7 +154,7 @@ function Profile({ favorites, removeFromFavorites }) {
                     </p>
                     <div className="mt-auto flex flex-wrap gap-2 pt-3">
                       <button
-                        className="btn btn-secondary btn-sm text-[11px]"
+                        className="btn btn-secondary btn-sm text-xs"
                         onClick={() => navigate(`/media/${item.date}`, { state: { image: item } })}
                       >
                         <i className="bi bi-arrows-fullscreen"></i>
@@ -162,7 +162,7 @@ function Profile({ favorites, removeFromFavorites }) {
                       </button>
                       {item.media_type === 'image' && (
                         <button
-                          className="btn btn-secondary btn-sm text-[11px]"
+                          className="btn btn-secondary btn-sm text-xs"
                           onClick={() => handleDownload(item)}
                           disabled={downloadingId === item.id}
                         >
@@ -171,7 +171,7 @@ function Profile({ favorites, removeFromFavorites }) {
                         </button>
                       )}
                       <button
-                        className="btn btn-sm ml-auto text-[11px] border border-red-500/30 bg-transparent text-red-400 hover:bg-red-500/10"
+                        className="btn btn-sm ml-auto text-xs border border-red-500/30 bg-transparent text-red-400 hover:bg-red-500/10"
                         onClick={() => handleRemoveFromFavorites(item.id, item.title)}
                         disabled={removedItemId === item.id}
                         title="Remove from your collection"

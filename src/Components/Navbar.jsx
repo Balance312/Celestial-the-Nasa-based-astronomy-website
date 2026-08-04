@@ -32,6 +32,7 @@ function Navbar({ favoritesCount }) {
     { to: "/apod", label: "APOD" },
     { to: "/gallery", label: "Gallery" },
     { to: "/epic", label: "EPIC" },
+    { to: "/chat", label: "Chat" },
     { to: "/profile", label: "My Collection", badge: favoritesCount },
     { to: "/about", label: "About" },
   ];

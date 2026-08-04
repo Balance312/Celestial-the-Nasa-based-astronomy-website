@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, useTransition, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { getApodByDate } from '../utils/nasaApi.js';
 import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
 import { getNasaApiKey } from '../utils/apiConfig.js';
@@ -7,12 +7,13 @@ import { APOD_START_DATE, DATE_MESSAGES, API_ERROR_MESSAGES, getDefaultDate } fr
 
 function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
   const navigate = useNavigate();
+  const { date: urlDate } = useParams();
   const [apodData, setApodData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [, startTransition] = useTransition();
 
-  const [selectedDate, setSelectedDate] = useState(getDefaultDate());
+  const [selectedDate, setSelectedDate] = useState(urlDate || getDefaultDate());
   const [isDownloading, setIsDownloading] = useState(false);
 
   const todayStr = useMemo(() => new Date().toISOString().split('T')[0], []);
@@ -76,30 +77,34 @@ function APODPage({ addToFavorites, removeFromFavorites, isFavorited }) {
     const newDateStr = addDaysToDateString(selectedDate, -1);
     if (newDateStr >= APOD_START_DATE) {
       startTransition(() => { setSelectedDate(newDateStr); setError(null); });
+      navigate(`/apod/${newDateStr}`, { replace: true });
     } else {
       setError(DATE_MESSAGES.BEFORE_START);
     }
-  }, [selectedDate, addDaysToDateString]);
+  }, [selectedDate, addDaysToDateString, navigate]);
 
   const goToNextDay = useCallback(() => {
     const newDateStr = addDaysToDateString(selectedDate, 1);
     if (newDateStr <= todayStr) {
       startTransition(() => { setSelectedDate(newDateStr); setError(null); });
+      navigate(`/apod/${newDateStr}`, { replace: true });
     } else {
       setError(DATE_MESSAGES.FUTURE);
     }
-  }, [selectedDate, addDaysToDateString, todayStr]);
+  }, [selectedDate, addDaysToDateString, todayStr, navigate]);
 
   const goToToday = useCallback(() => {
     startTransition(() => setSelectedDate(todayStr));
-  }, [todayStr]);
+    navigate(`/apod/${todayStr}`, { replace: true });
+  }, [todayStr, navigate]);
 
   const handleDateChange = useCallback((e) => {
     const newDate = e.target.value;
     if (newDate < APOD_START_DATE) { setError(DATE_MESSAGES.BEFORE_START); return; }
     if (newDate > todayStr) { setError(DATE_MESSAGES.FUTURE); return; }
     startTransition(() => { setError(null); setSelectedDate(newDate); });
-  }, [todayStr]);
+    navigate(`/apod/${newDate}`, { replace: true });
+  }, [todayStr, navigate]);
 
   const itemIsFavorited = apodData ? isFavorited(apodData) : false;
   const downloadImageUrl = apodData?.hdurl || apodData?.url || '';

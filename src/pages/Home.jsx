@@ -1,6 +1,6 @@
-import { Link } from "react-router-dom"
+import { Link, useNavigate } from "react-router-dom"
 import { useState, useEffect, useCallback } from "react"
-import { getTodayApod, getEpicLatest, getEpicImageUrl } from "../utils/nasaApi.js"
+import { getTodayApod, getEpicLatest, getEpicImageUrl, getRandomGallery } from "../utils/nasaApi.js"
 import { getNasaApiKey } from "../utils/apiConfig.js"
 
 const HERO_SLIDES = [
@@ -21,29 +21,18 @@ const HERO_SLIDES = [
   },
 ]
 
-const MARS_ROVER_HIGHLIGHTS = [
-  {
-    name: "Perseverance: Delta Front",
-    date: "Dec 11, 2024",
-    image: "https://images.unsplash.com/photo-1614728894747-a83421e2b9c9?w=400&q=80",
-  },
-  {
-    name: "Curiosity: Gale Crater Panorama",
-    date: "Oct 15, 2024",
-    image: "https://images.unsplash.com/photo-1614313913007-2b4ae8ce32d6?w=400&q=80",
-  },
-  {
-    name: "Ingenuity: Flight 72",
-    date: "Sep 12, 2024",
-    image: "https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=400&q=80",
-  },
-]
+const WONDERS_COUNT = 3
+const WONDERS_ROTATE_MS = 20000
 
 function Home() {
+  const navigate = useNavigate()
   const [todayAPOD, setTodayAPOD] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [epicImage, setEpicImage] = useState(null);
+  const [randomWonders, setRandomWonders] = useState([]);
+  const [wondersFading, setWondersFading] = useState(false);
+  const [wondersLoading, setWondersLoading] = useState(true);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -83,6 +72,36 @@ function Home() {
     const timer = setInterval(nextSlide, 6000);
     return () => clearInterval(timer);
   }, [nextSlide]);
+
+  const fetchRandomWonders = useCallback(async () => {
+    try {
+      const apiKey = getNasaApiKey();
+      const data = await getRandomGallery(apiKey, WONDERS_COUNT, { preferCache: false });
+      if (data && data.length > 0) {
+        setRandomWonders(data);
+      }
+    } catch (err) {
+      console.error('Error fetching random wonders:', err);
+    } finally {
+      setWondersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    fetchRandomWonders();
+
+    const rotateWithFade = async () => {
+      setWondersFading(true);
+      await new Promise((r) => setTimeout(r, 400));
+      setWondersLoading(true);
+      await fetchRandomWonders();
+      setWondersFading(false);
+    };
+
+    const timer = setInterval(rotateWithFade, WONDERS_ROTATE_MS);
+    return () => clearInterval(timer);
+  }, [fetchRandomWonders]);
 
   return (
     <div className="min-h-screen">
@@ -240,13 +259,13 @@ function Home() {
               </h3>
               <div className="mb-3 rounded-lg bg-space-700 p-3">
                 <p className="text-xs text-text-muted">Live Earth from EPIC</p>
-                <p className="mt-1 text-[10px] text-text-muted">
+                <p className="mt-1 text-xs text-text-muted">
                   Date: {epicImage?.date ? epicImage.date.split('T')[0] : new Date().toISOString().split('T')[0]}
                 </p>
-                <p className="text-[10px] text-text-muted">Instrument: EPIC Camera</p>
-                <p className="text-[10px] text-text-muted">Source: DSCOVR Satellite</p>
-                <p className="text-[10px] text-text-muted">Distance: ~1,000,000 mi</p>
-                <p className="mt-2 text-[10px] text-text-muted">
+                <p className="text-xs text-text-muted">Instrument: EPIC Camera</p>
+                <p className="text-xs text-text-muted">Source: DSCOVR Satellite</p>
+                <p className="text-xs text-text-muted">Distance: ~1,000,000 mi</p>
+                <p className="mt-2 text-xs text-text-muted">
                   {epicImage?.time || '--:--:--'} UTC
                 </p>
               </div>
@@ -255,29 +274,62 @@ function Home() {
               </Link>
             </div>
 
-            {/* Recent Mars Rover Highlights */}
+            {/* Random Wonders */}
             <div className="card p-4">
               <h3 className="mb-4 font-display text-sm font-bold text-gold">
-                Recent Mars Rover Highlights
+                <i className="bi bi-stars mr-1"></i> Random Wonders
               </h3>
-              <div className="space-y-3">
-                {MARS_ROVER_HIGHLIGHTS.map((rover) => (
-                  <div key={rover.name} className="flex gap-3 rounded-lg bg-space-700 p-2">
-                    <img
-                      src={rover.image}
-                      alt={rover.name}
-                      className="h-16 w-16 flex-shrink-0 rounded object-cover"
-                      loading="lazy"
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-xs font-bold text-text-bright">{rover.name}</p>
-                      <p className="text-[10px] text-text-muted">{rover.date}</p>
-                      <button className="mt-1 text-[10px] font-semibold text-cyan-glow hover:text-gold">
-                        View Details →
-                      </button>
+              <div
+                className={`space-y-3 transition-all duration-300 ${
+                  wondersFading ? 'translate-y-1 opacity-0 scale-[0.98]' : 'translate-y-0 opacity-100 scale-100'
+                }`}
+              >
+                {wondersLoading ? (
+                  Array.from({ length: WONDERS_COUNT }).map((_, i) => (
+                    <div key={i} className="flex gap-3 rounded-lg bg-space-700 p-2">
+                      <div className="h-16 w-16 flex-shrink-0 animate-pulse rounded bg-space-600" />
+                      <div className="flex-1 space-y-2 py-1">
+                        <div className="h-3 w-3/4 animate-pulse rounded bg-space-600" />
+                        <div className="h-2.5 w-1/2 animate-pulse rounded bg-space-600" />
+                        <div className="h-2.5 w-1/3 animate-pulse rounded bg-space-600" />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                ) : (
+                  randomWonders.map((item) => (
+                    <div
+                      key={item.date || item.title}
+                      className="flex gap-3 rounded-lg bg-space-700 p-2 transition-colors hover:bg-space-600 cursor-pointer"
+                      onClick={() => navigate(`/media/${item.date}`)}
+                    >
+                      {item.media_type === 'image' ? (
+                        <img
+                          src={item.url}
+                          alt={item.title}
+                          className="h-16 w-16 flex-shrink-0 rounded object-cover"
+                          loading="lazy"
+                        />
+                      ) : (
+                        <div className="flex h-16 w-16 flex-shrink-0 items-center justify-center rounded bg-space-800">
+                          <span className="text-xl">🎬</span>
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-bold text-text-bright">{item.title}</p>
+                        <p className="text-xs text-text-muted">{item.date}</p>
+                        <button
+                          className="mt-1 text-xs font-semibold text-cyan-glow hover:text-gold"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/media/${item.date}`);
+                          }}
+                        >
+                          View Details →
+                        </button>
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           </div>

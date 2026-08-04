@@ -291,7 +291,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                     <div className="absolute inset-0 flex items-end bg-gradient-to-t from-space-900/90 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                       <div className="flex w-full gap-2 p-3">
                         <button
-                          className="flex-1 rounded bg-cyan-glow/90 px-2 py-1.5 text-xs font-bold text-space-900 transition-colors hover:bg-cyan-glow"
+                          className="flex-1 rounded bg-cyan-glow/90 px-3 py-2.5 text-xs font-bold text-space-900 transition-colors hover:bg-cyan-glow min-h-[40px]"
                           onClick={(event) => {
                             event.stopPropagation();
                             if (isSearchMode) {
@@ -304,7 +304,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                           {item.media_type === 'image' ? 'View Full' : 'Open Media'}
                         </button>
                         <button
-                          className="rounded bg-space-800/90 px-2 py-1.5 text-xs font-bold text-text-bright transition-colors hover:bg-space-700"
+                          className="rounded bg-space-800/90 px-3 py-2.5 text-xs font-bold text-text-bright transition-colors hover:bg-space-700 min-h-[40px]"
                           onClick={(event) => handleDownload(event, item)}
                           disabled={item.media_type !== 'image' || downloadingId === (item.date || item.id)}
                         >
@@ -318,7 +318,7 @@ function GalleryPage({ addToFavorites, removeFromFavorites, isFavorited }) {
                     <p className="gallery-date">{item.date}</p>
                     <div className="flex items-center justify-between">
                       <button
-                        className="text-[11px] font-semibold text-text-muted transition-colors hover:text-cyan-glow"
+                        className="text-xs font-semibold text-text-muted transition-colors hover:text-cyan-glow"
                         onClick={(event) => {
                           event.stopPropagation();
                           if (itemIsFavorited) { removeFromFavorites(itemId); return; }

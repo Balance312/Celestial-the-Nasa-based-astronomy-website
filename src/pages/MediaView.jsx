@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { getApodByDate } from '../utils/nasaApi.js';
 import { downloadFile, sanitizeFilename } from '../utils/downloadHandler.js';
@@ -20,6 +20,8 @@ function MediaView({
   const [relatedImages] = useState(() => location.state?.relatedImages || []);
   const [loading, setLoading] = useState(() => !location.state?.image && !!date);
   const [error, setError] = useState(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const mediaDisplayRef = useRef(null);
 
   // Fetch media data - declared before useEffect
   const fetchMediaData = useCallback(async ({ signal } = {}) => {
@@ -90,6 +92,48 @@ function MediaView({
     }
   }, [media]);
 
+  const handleFullscreen = useCallback(async () => {
+    const el = mediaDisplayRef.current;
+    if (!el) return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+        setIsFullscreen(false);
+      } else {
+        await el.requestFullscreen();
+        setIsFullscreen(true);
+      }
+    } catch (err) {
+      console.error('Fullscreen failed:', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    const onFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener('fullscreenchange', onFsChange);
+    return () => document.removeEventListener('fullscreenchange', onFsChange);
+  }, []);
+
+  const handleShare = useCallback(async () => {
+    const shareUrl = window.location.href;
+    const shareData = {
+      title: media?.title || 'NASA Media',
+      text: media?.explanation || media?.description || media?.title || 'Check out this NASA media',
+      url: shareUrl,
+    };
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+      } else {
+        await navigator.clipboard.writeText(shareUrl);
+      }
+    } catch (err) {
+      if (err.name !== 'AbortError') {
+        console.error('Share failed:', err);
+      }
+    }
+  }, [media]);
+
   if (loading) {
     return (
       <div className="media-view-page">
@@ -138,7 +182,7 @@ function MediaView({
         </button>
 
         {/* Media Display */}
-        <div className="media-display">
+        <div className="media-display" ref={mediaDisplayRef}>
           {isApodData ? (
             // APOD Media Display
             media.media_type === 'image' ? (
@@ -201,6 +245,24 @@ function MediaView({
           </div>
 
           <div className="media-controls-right">
+            {media.media_type === 'image' && (
+              <button
+                className="btn btn-secondary btn-lg"
+                onClick={handleFullscreen}
+                title={isFullscreen ? 'Exit fullscreen' : 'View in fullscreen'}
+              >
+                <i className={`bi ${isFullscreen ? 'bi-fullscreen-exit' : 'bi-fullscreen'}`}></i>
+                <span className="btn-label">{isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'}</span>
+              </button>
+            )}
+            <button
+              className="btn btn-secondary btn-lg"
+              onClick={handleShare}
+              title="Share this media"
+            >
+              <i className="bi bi-share"></i>
+              <span className="btn-label">Share</span>
+            </button>
             {(!isApodData || media.media_type === 'image') && (
               <button
                 className="btn btn-download btn-lg"

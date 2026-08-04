@@ -74,7 +74,7 @@ export default function FloatingChatBubble() {
             </div>
           </div>
 
-          <div className="chat-window-messages">
+          <div className="chat-window-messages" onWheel={(e) => e.stopPropagation()}>
             {messages.map((msg) => (
               <div key={msg.id} className={`message message-${msg.role}`}>
                 <div className={`message-bubble ${msg.role}`}>

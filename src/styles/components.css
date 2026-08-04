@@ -1,7 +1,7 @@
 @layer components {
   /* ── Buttons ── */
   .btn {
-    @apply relative inline-flex items-center gap-2 overflow-hidden isolate rounded px-5 py-2.5 font-body font-semibold tracking-wide border border-transparent transition-[transform,box-shadow,background] duration-300 cursor-pointer;
+    @apply relative inline-flex items-center gap-2 overflow-hidden isolate rounded px-5 py-2.5 font-body font-semibold tracking-wide border border-transparent transition-[transform,box-shadow] duration-300 cursor-pointer;
   }
 
   .btn::after {
@@ -9,7 +9,7 @@
     @apply absolute inset-0 opacity-0;
     background: linear-gradient(120deg, transparent, rgba(0, 212, 255, 0.2), transparent);
     transform: translateX(-120%);
-    transition: transform 520ms ease, opacity 200ms ease;
+    transition: transform 0ms, opacity 200ms ease;
   }
 
   .btn:hover::after {
@@ -28,8 +28,8 @@
 
   .btn:disabled {
     @apply opacity-50 cursor-not-allowed;
-    transform: none;
-    box-shadow: none;
+    transform: none !important;
+    box-shadow: none !important;
   }
 
   .btn-primary {
@@ -168,7 +168,7 @@
   }
 
   .collection-badge {
-    @apply bg-cyan-subtle border border-cyan-dim text-cyan-glow text-[0.7rem] px-2 py-0.5 rounded-full font-bold;
+    @apply bg-cyan-subtle border border-cyan-dim text-cyan-glow text-xs px-2 py-0.5 rounded-full font-bold;
   }
 
   .navbar-toggler {
@@ -539,6 +539,14 @@
     @apply overflow-hidden rounded-lg border border-border-glow bg-space-900;
   }
 
+  .media-display:fullscreen {
+    @apply flex items-center justify-center bg-black rounded-none border-none;
+  }
+
+  .media-display:fullscreen .media-image {
+    @apply max-h-screen max-w-full object-contain;
+  }
+
   .media-image,
   .media-iframe {
     @apply block w-full;
@@ -630,7 +638,7 @@
   }
 
   .meta-label {
-    @apply text-[0.7rem] uppercase tracking-widest text-text-muted;
+    @apply text-xs uppercase tracking-widest text-text-muted;
   }
 
   .meta-value {
@@ -727,7 +735,7 @@
   }
 
   .chatbot-messages {
-    @apply flex flex-1 flex-col gap-4 overflow-y-auto p-9;
+    @apply flex flex-1 flex-col gap-4 overflow-y-auto p-9 min-h-0;
   }
 
   .message {
@@ -779,7 +787,6 @@
   }
 
   .send-btn:hover {
-    @apply bg-cyan-glow;
     box-shadow: 0 0 20px rgba(0, 212, 255, 0.4);
   }
 
@@ -843,7 +850,8 @@
   }
 
   .chat-window-messages {
-    @apply flex flex-col gap-3 overflow-y-auto p-4;
+    @apply flex flex-1 flex-col gap-3 overflow-y-auto p-4 min-h-0;
+    overscroll-behavior: contain;
   }
 
   .chat-window-form {
@@ -1180,5 +1188,56 @@
   .apod-history-note i,
   .date-history-note i {
     @apply text-cyan-glow;
+  }
+
+  /* ── Mobile Fixes ── */
+
+  /* #1 Gallery overlay always visible on touch devices */
+  @media (hover: none) {
+    .gallery-item .group > .absolute {
+      @apply opacity-100;
+    }
+  }
+
+  /* #2 Chat window responsive width */
+  .floating-chat-window {
+    @apply right-4 w-[min(360px,calc(100vw-2rem))];
+  }
+
+  /* #3 .btn-sm touch target */
+  .btn-sm {
+    @apply min-h-[44px] py-2;
+  }
+
+  /* #4 Chat header buttons touch target */
+  .full-chat-btn,
+  .clear-btn-small,
+  .close-btn {
+    @apply h-11 w-11;
+  }
+
+  /* #12 Modal close button touch target */
+  .modal-close {
+    @apply h-11 w-11;
+  }
+
+  /* #13 Modal full-screen on mobile */
+  @media (max-width: 640px) {
+    .modal-overlay {
+      @apply p-0;
+    }
+    .modal-content {
+      @apply h-full w-full rounded-none;
+    }
+  }
+
+  /* #15 Navbar toggler touch target */
+  .navbar-toggler {
+    @apply min-h-[44px] p-2.5;
+  }
+
+  /* #16 Footer links touch target */
+  .footer-links a {
+    @apply block py-2;
   }
 }

@@ -450,14 +450,14 @@ function EpicPage() {
               onChange={handleTimelineChange}
               className="w-full accent-cyan-glow"
               style={{
-                height: '6px',
+                height: '28px',
                 background: `linear-gradient(to right, var(--color-cyan-glow) ${(currentTimeIndex / (epicData.length - 1)) * 100}%, var(--color-space-600)) ${(currentTimeIndex / (epicData.length - 1)) * 100}%`,
                 borderRadius: '4px',
                 outline: 'none',
                 cursor: 'pointer',
               }}
             />
-            <div className="mt-2 flex justify-between text-[10px] text-text-muted">
+            <div className="mt-2 flex justify-between text-xs text-text-muted">
               <span>{epicData[0]?.time}</span>
               <span>{epicData[epicData.length - 1]?.time}</span>
             </div>

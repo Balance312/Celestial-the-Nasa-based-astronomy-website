@@ -60,7 +60,13 @@ export function useChat({ persistToStorage = true } = {}) {
   const messagesEndRef = useRef(null);
 
   const scrollToBottom = useCallback(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = messagesEndRef.current;
+    if (el) {
+      const container = el.closest(".chat-window-messages, .chatbot-messages");
+      if (container) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
   }, []);
 
   useEffect(() => {

@@ -53,6 +53,16 @@ function Router({
             }
           />
           <Route
+            path="/apod/:date"
+            element={
+              <APODPage
+                addToFavorites={addToFavorites}
+                removeFromFavorites={removeFromFavorites}
+                isFavorited={isFavorited}
+              />
+            }
+          />
+          <Route
             path="/gallery"
             element={
               <GalleryPage
